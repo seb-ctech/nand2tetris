@@ -1,0 +1,25 @@
+Mux Derivation;
+
+
+(a AND (NOT b) AND (NOT sel)) OR
+((a AND b) AND (NOT sel)) OR
+((NOT a) AND b and sel) OR
+(a AND b AND sel)
+
+--------------
+
+(a AND (NOT b) AND (NOT sel)) OR
+((a AND b) AND (NOT sel)) OR
+((NOT a) AND b and sel) OR
+(a AND b AND sel)
+
+--------------
+
+(a AND b) OR 
+((NOT a) AND b AND sel) OR
+(a AND (NOT b) AND (NOT sel))
+
+--------------
+
+(a AND (b OR ((NOT b) AND (NOT sel)))) OR
+((NOT a) AND b AND sel)
