@@ -27,8 +27,28 @@
   @i
   M=0
 
-  @EMPTY
+  @SETEMPTY
   D;JEQ
+
+  (SETFILL)
+    @FILL
+    D=A
+
+    @mode
+    M=D
+
+    @FILL
+    0;JMP
+
+  (SETEMPTY)
+    @EMPTY
+    D=A
+
+    @mode
+    M=D
+
+    @EMPTY
+    0;JMP
 
 (FILL)
 
@@ -39,17 +59,7 @@
   A=A+D
   M=-1
 
-  @i
-  M=M+1
-  D=M
-
-  @cells
-  D=M-D 
-
-  @FILL
-  D;JNE
-
-  @LISTEN
+  @TRAVERSE
   0;JMP
 
 (EMPTY)
@@ -61,6 +71,11 @@
   A=A+D
   M=0
 
+  @TRAVERSE
+  0;JMP
+
+(TRAVERSE)
+
   @i
   M=M+1
   D=M
@@ -68,7 +83,8 @@
   @cells
   D=M-D 
 
-  @EMPTY
+  @mode
+  A=M
   D;JNE
 
   @LISTEN
