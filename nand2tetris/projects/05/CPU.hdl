@@ -50,7 +50,8 @@ CHIP CPU {
     Mux16(a=aluOut, b=instruction, sel=isAOp, out=muxA);
     Or(a=isAOp, b=instruction[5], out=isAOpOrRegA);
     ARegister(in=muxA, load=isAOpOrRegA, out=regA, out[0..14]=addressM);
-    DRegister(in=aluOut, load=instruction[4], out=regD);
+    And(a=instruction[4], b=instruction[15], out=isCAndD);
+    DRegister(in=aluOut, load=isCAndD, out=regD);
     Mux16(a=regA, b=inM, sel=instruction[12], out=muxAlu);
     ALU(x=regD, y=muxAlu, 
         zx=instruction[11], 
