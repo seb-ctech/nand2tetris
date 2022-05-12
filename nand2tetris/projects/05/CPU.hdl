@@ -23,6 +23,13 @@
  * to their new values only in the next time step. If reset==1 then the 
  * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
  * than to the address resulting from executing the current instruction. 
+
+
+instruction code
+
+1  11 0 100101 001 110
+op 11 a cccccc ddd jjj
+              (ADM)
  */
 
 CHIP CPU {
@@ -39,5 +46,40 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    Not(in=instruction[15], out=isAOp);
+    Mux16(a=aluOut, b=instruction, sel=isAOp, out=muxA);
+    Or(a=isAOp, b=instruction[5], out=isAOpOrRegA);
+    ARegister(in=muxA, load=isAOpOrRegA, out=regA, out[0..14]=addressM);
+    DRegister(in=aluOut, load=instruction[4], out=regD);
+    Mux16(a=regA, b=inM, sel=instruction[12], out=muxAlu);
+    ALU(x=regD, y=muxAlu, 
+        zx=instruction[11], 
+        nx=instruction[10], 
+        zy=instruction[9], 
+        ny=instruction[8], 
+        f=instruction[7], 
+        no=instruction[6], 
+        out=aluOut, out=outM, 
+        zr=controlZ, 
+        ng=controlN);
+    Not(in=controlZ, out=notZ);
+    Not(in=controlN, out=notN);
+    And(a=notZ, b=notN, out=GT);
+    And(a=notZ, b=controlN, out=LT);
+    Or(a=controlZ, b=notN, out=EGT);
+    Or(a=controlZ, b=controlN, out=ELT);
+    Mux8Way(a=false, 
+            b=GT, 
+            c=controlZ, 
+            d=EGT, 
+            e=LT, 
+            f=notZ, 
+            g=ELT, 
+            h=true, 
+            sel=instruction[0..2], 
+            out=jump);
+    And(a=jump, b=instruction[15], out=jumpOnCInstr);
+    Not(in=jumpOnCInstr, out=notJump);
+    PC(in=regA, load=jumpOnCInstr, inc=notJump, reset=reset, out[0..14]=pc);
+    And(a=instruction[15], b=instruction[3], out=writeM);
 }
