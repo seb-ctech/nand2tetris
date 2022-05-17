@@ -1,5 +1,5 @@
 const fs = require('fs')
-
+const path = require('path')
 
 // TODO: Progress in stages
 const args = process.argv.slice(2);
@@ -11,8 +11,30 @@ const someBinary = [
   "0101010100100111"
 ]
 
-function testPrograms(){
-  
+const programs = [
+  "./add/Add.asm",
+  "./max/Max.asm",
+  "./max/MaxL.asm",
+  "./pong/Pong.asm",
+  "./pong/PongL.asm",
+  "./rect/Rect.asm",
+  "./rect/RectL.asm"
+]
+
+testPrograms(["./max/MaxL.asm"]);
+
+function assemble(code){
+  return someBinary;
+}
+
+
+function testPrograms(programs){
+  programs.map(program => ({src: program, bin: assemble(readInputFile(program))}))
+    .forEach(binary => writeBinaryFile(binary.bin, path.format({
+      dir: "./",
+      name: path.parse(binary.src).name,
+      ext: ".hack"
+    })))
 }
 
 function readInputFile(path){
