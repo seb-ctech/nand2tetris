@@ -61,23 +61,53 @@ const C = {
   }
 }
 
-testInstructions = [
-  "@101",
-  "(LOOP)",
-  "@LOOP",
-  "D = A+1; JLT",
-  "A=D-1; // Some Comment and D=M+1 code",
-  "0;JMP",
-  "//Comment to eliminate"
-]
-
-console.log(readInputFile(programs[0]));
-console.log(removeComments(readInputFile(programs[0])));
+console.log(assemble(readInputFile(programs[0])));
 
 function assemble(code){
-  return someBinary;
+  const clean_code = removeComments(code);
+  return clean_code.map(instruction => match_instruction(instruction, resolveA, () => ""));
 }
 
+function match_instruction(instruction, onA, onC){
+  if(/^@.*$/.test(instruction)){
+    return "0" + onA(instruction);
+  } else {
+    return "1" + onC(instruction);
+  }
+}
+
+function resolveA(value){
+  const stripped = value.replace("@", "");
+  if(/\d*/.test(stripped)){
+    return convertToBinary(stripped);
+  } else {
+    return "000000000000000"
+  }
+}
+
+//TODO: How to solve this functionally?
+function convertToBinary(value){
+  const length = 15;
+  let numberToMatch = Math.pow(2, length);
+  let remainingValue = value;
+  let finalBinary = "";
+  if(value > 0){
+    while(numberToMatch >= 1){
+      if(remainingValue >= numberToMatch){
+        finalBinary += "1";
+        remainingValue -= numberToMatch;
+      } else {
+        finalBinary += "0";
+      }
+      numberToMatch /= 2;
+    }
+  } else {
+    for(let i = 0; i <= length; i++){
+      finalBinary += "0";
+    }
+  }
+  return finalBinary;
+}
 
 function assemblePrograms(programs){
   programs.map(program => ({src: program, bin: assemble(readInputFile(program))}))
