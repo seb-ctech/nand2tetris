@@ -71,6 +71,9 @@ testInstructions = [
   "//Comment to eliminate"
 ]
 
+console.log(readInputFile(programs[0]));
+console.log(removeComments(readInputFile(programs[0])));
+
 function assemble(code){
   return someBinary;
 }
@@ -91,14 +94,17 @@ function readInputFile(path){
   return lines;
 }
 
+function log(value, additional=""){
+  console.log(value, additional);
+  return value
+}
+
 function removeComments(lines){
-  const ruleFindComments = new RegExp("\/\/.*", 'g');
-  const ruleCommentedLine = new RegExp("^\/\/.*", 'g');
-  const ruleFindEmptyLines = new RegExp("^\s*$", 'g');
-  return lines.filter(line => !ruleFindEmptyLines.test(line))
+  const ruleFindComments = new RegExp("\s*\/\/.*", 'g');
+  return lines
     .map(line => line.replace(/\s/g, ""))
-    .filter(line => !ruleCommentedLine.test(line))
     .map(line => line.replace(ruleFindComments, ""))
+    .filter(line => line.length > 0)
 }
 
 function writeBinaryFile(code, path){
