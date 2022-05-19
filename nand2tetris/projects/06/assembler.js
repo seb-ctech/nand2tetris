@@ -4,6 +4,38 @@ const path = require('path')
 // TODO: Progress in stages
 const args = process.argv.slice(2);
 
+/*
+
+A: Address Register.
+D: Data Register.
+M: Refers to the register in Main Memory whose address is currently stored in A.
+SP: RAM address 0.
+LCL: RAM address 1.
+ARG: RAM address 2.
+THIS: RAM address 3.
+THAT: RAM address 4.
+R0-R15: Addresses of 16 RAM Registers, mapped from 0 to 15.
+SCREEN: Base address of the Screen Map in Main Memory, which is equal to 16384.
+KBD: Keyboard Register address in Main Memory, which is equal to 24576.
+
+*/
+
+const defaultSymbols = {
+  "SP": 0,
+  "LCL": 1,
+  "ARG": 2,
+  "THIS": 3,
+  "THAT": 4,
+  "SCREEN": 16384,
+  "KBD": 24576
+}
+
+let addresses = [];
+
+let symbolTable = {
+
+}
+
 const someBinary = [
   "0001000100100111",
   "0001111100100001",
@@ -70,12 +102,9 @@ const C = {
   }
 }
 
-assemblePrograms([
-  programs[0], 
-  programs[2], 
-  programs[4], 
-  programs[6]
-]);
+// Failed on @END_GT: Expected(65), Got(17)
+
+assemblePrograms(programs);
 
 function assemblePrograms(programs){
   programs.map(program => ({src: program, bin: assemble(readInputFile(program))}))
@@ -88,14 +117,29 @@ function assemblePrograms(programs){
 
 function assemble(code){
   const clean_code = removeComments(code);
-  return clean_code.map(instruction => match_instruction(instruction, resolveA, resolveC));
+  symbolTable = {};
+  const labeless_code = resolveLabels(clean_code);
+  console.log(symbolTable);
+  return labeless_code.map( (instruction, i) => match_instruction(instruction, i, resolveA, resolveC));
 }
 
-function match_instruction(instruction, onA, onC){
+function resolveLabels(code){
+ return code.filter( (line, i) => {
+   if(/\((\w|.|_)+\)/.test(line)){
+    	const label = line.match(/[^\(](\w|.|_)+[^\)]/)[0];
+      const offset = Object.entries(symbolTable).length;
+      symbolTable[label] = i - offset;
+      return false
+   } else return true;
+ })
+}
+
+function match_instruction(instruction, line, onA, onC){
+  console.log(line, ":", instruction);
   if(/^@.*$/.test(instruction)){
-    return "0" + onA(instruction);
+    return "0" + log(onA(instruction), "\n");
   } else {
-    return "1" + onC(instruction);
+    return "1" + log(onC(instruction), "\n");
   }
 }
 
@@ -105,16 +149,39 @@ function resolveA(instruction){
 }
 
 function resolveValue(value){
-  if(/\d*/.test(value)){
+  if(/^\d*$/.test(value)){
     return convertToBinary(value);
   } else {
-    //TODO: Is Variable
-    return "000000000000000"
+    return convertToBinary(resolveSymbol(value));
   }
 }
 
+function resolveSymbol(symbol){
+  if(/R\d+/.test(symbol)){
+    const registerNumber = parseInt(symbol.match(/\d+/));
+    if(registerNumber >= 0 && registerNumber <= 15){
+      return registerNumber
+    }
+  }
+  if(Object.keys(defaultSymbols).includes(symbol)){
+    return defaultSymbols[symbol]
+  }
+  if (Object.keys(symbolTable).includes(symbol)){
+    return symbolTable[symbol]
+  } else {
+    return findFreeAddressAndAssign(symbol)
+  }
+}
+
+function findFreeAddressAndAssign(symbol){
+  const newAddress = addresses.length > 0 ? addresses[addresses.length - 1] + 1 : 16;
+  addresses.push(newAddress);
+  symbolTable[symbol] = newAddress;
+  console.log({symbol, newAddress});
+  return newAddress
+}
+
 function resolveC(instruction){
-  console.log({instruction});
   const buffer = "11";
   const hasAssignment = instruction.includes("=");
   const assignCompute = instruction.split("=");
@@ -186,15 +253,4 @@ function removeComments(lines){
 
 function writeBinaryFile(code, path){
   fs.writeFile(path, code.join("\n"), console.error);
-}
-
-
-// Symbol Table Handling
-
-function resolveSymbols(){
-
-}
-
-function assignLabels(){
-
 }
