@@ -76,13 +76,22 @@ function match_instruction(instruction, onA, onC){
   }
 }
 
-function resolveA(value){
-  const stripped = value.replace("@", "");
-  if(/\d*/.test(stripped)){
-    return convertToBinary(stripped);
+function resolveA(instruction){
+  const stripped = instruction.replace("@", "");
+  return resolveValue(stripped);
+}
+
+function resolveValue(value){
+  if(/\d*/.test(value)){
+    return convertToBinary(value);
   } else {
+    //TODO: Is Variable
     return "000000000000000"
   }
+}
+
+function resolveC(instruction){
+
 }
 
 //TODO: How to solve this functionally?
