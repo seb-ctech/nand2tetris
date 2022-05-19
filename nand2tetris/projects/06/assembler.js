@@ -44,10 +44,19 @@ const C = {
       "D|X": "010101"
     }
   ,
+  opmode: {
+    "A": 0,
+    "M": 1
+  },
   dest: {
-    M: 3,
-    D: 2,
-    A: 1
+    "n": "000",
+    "M": "001",
+    "D": "010",
+    "MD": "011",
+    "A": "100",
+    "AM": "101",
+    "AD": "110",
+    "AMD": "111"
   },
   jump: {
     n: "000",
@@ -61,11 +70,25 @@ const C = {
   }
 }
 
-console.log(assemble(readInputFile(programs[0])));
+assemblePrograms([
+  programs[0], 
+  programs[2], 
+  programs[4], 
+  programs[6]
+]);
+
+function assemblePrograms(programs){
+  programs.map(program => ({src: program, bin: assemble(readInputFile(program))}))
+    .forEach(binary => writeBinaryFile(binary.bin, path.format({
+      dir: "./",
+      name: path.parse(binary.src).name,
+      ext: ".hack"
+    })))
+}
 
 function assemble(code){
   const clean_code = removeComments(code);
-  return clean_code.map(instruction => match_instruction(instruction, resolveA, () => ""));
+  return clean_code.map(instruction => match_instruction(instruction, resolveA, resolveC));
 }
 
 function match_instruction(instruction, onA, onC){
@@ -91,12 +114,36 @@ function resolveValue(value){
 }
 
 function resolveC(instruction){
+  console.log({instruction});
+  const buffer = "11";
+  const hasAssignment = instruction.includes("=");
+  const assignCompute = instruction.split("=");
+  const computeJump = (hasAssignment ? assignCompute[1] : assignCompute[0]).split(";");
+  const computation = parseComputation(computeJump[0]);
+  const parsed = {
+    op: C.op[computation.op],
+    opmode: C.opmode[computation.mode],
+    dest: parseDestination(hasAssignment ? assignCompute[0] : null),
+    jump: C.jump[computeJump[1] ? computeJump[1] : "n"]
+  }
+  return buffer + parsed.opmode + parsed.op + parsed.dest + parsed.jump;
+}
 
+function parseComputation(computation){
+  const match = computation.match(/(A|M){1}/);
+  return {
+    op: computation.replace(/A|M/, "X"),
+    mode: match ? match[0] : "A"
+  }
+}
+
+function parseDestination(destination){
+  return destination ?  C.dest[destination] : C.dest["n"]
 }
 
 //TODO: How to solve this functionally?
 function convertToBinary(value){
-  const length = 15;
+  const length = 14;
   let numberToMatch = Math.pow(2, length);
   let remainingValue = value;
   let finalBinary = "";
@@ -116,15 +163,6 @@ function convertToBinary(value){
     }
   }
   return finalBinary;
-}
-
-function assemblePrograms(programs){
-  programs.map(program => ({src: program, bin: assemble(readInputFile(program))}))
-    .forEach(binary => writeBinaryFile(binary.bin, path.format({
-      dir: "./",
-      name: path.parse(binary.src).name,
-      ext: ".hack"
-    })))
 }
 
 function readInputFile(path){
@@ -149,17 +187,6 @@ function removeComments(lines){
 function writeBinaryFile(code, path){
   fs.writeFile(path, code.join("\n"), console.error);
 }
-
-
-
-// Parsing
-
-
-// Code Translation
-function identifyOpCode(){
-
-}
-
 
 
 // Symbol Table Handling
