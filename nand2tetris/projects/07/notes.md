@@ -63,5 +63,6 @@ Symbolic <-> Binary
 
 Use an assembler to translate the symbolic assembly language to binary
 
-### Low-Level Programming
+SCREEN is the label for the base address for the Screen device
+KBD is the label for the base address for the Keyboard
 
