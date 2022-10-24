@@ -13,10 +13,17 @@ D=M
 @b
 M=D
 
+@R2
+M=0
+
 @i
 M=0
 
 (ADD_ONCE)
+
+@END
+D;JLE
+
 @a
 D=M
 
@@ -27,8 +34,6 @@ M=M+D
 M=M-1
 D=M
 
-@END
-D;JEQ
 @ADD_ONCE
 0;JMP
 
