@@ -14,11 +14,14 @@ function translate(input_file){
 }
 
 function parse(line){
-  //TODO: Implement Parser
+  const keys = ["command", "target", "value"]
+  const parts = line.split(" ").map(part => part.replace(/\s./g, ""));
+  return Object.fromEntries(Object.keys(parts).map(index => [keys[index], parts[index]]))
 }
 
 function writer(command){
   //TODO: Implement Writer
+  return command.command
 }
 
 function removeComments(lines){
