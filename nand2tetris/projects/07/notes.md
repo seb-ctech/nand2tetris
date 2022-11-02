@@ -53,7 +53,8 @@ C-Instruction
 dest = comp ; jump (we compute something specifying registers, we can store them in a registers and then optionally jump aftewards)
 
 dest = null, M, D, MD, A, AM, AD, AMD (a combination of destinations is possible to store a value in multiple locations)
-comp = 0, 1, -1, D, A, !D, !A, -D, -A, D+1, A+1, D-1, A-1, D+A, D-A, A-D, D&A, D|A, M, !M, -M, M+1, M-1, D+M, D-M, M-D, D&M, D|M (The arithmetic and logic operations available and implemented by the CPU Hardware)
+comp = 0, 1, -1, D, A, !D, !A, -D, -A, D+1, A+1, D-1, A-1, D+A, D-A, A-D, D&A, D|A, M, !M, -M, M+1, M-1, D+M, D-M, M-D, D&M, D|M 
+(The arithmetic and logic operations available and implemented by the CPU Hardware)
 jump = null, JGT, JEQ, JGE, JLT, JNE, JLE, JMP (the conditional jump compare the result of comp with 0)
 0; JMP (is an unconditional jump)
 

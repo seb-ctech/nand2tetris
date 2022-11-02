@@ -35,16 +35,17 @@ function writer(command){
   return block
 }
 
-//TODO: Implement pointer
 //TODO: Implement comparison operators
 function writeAssembly(command){
   const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
   const hasRandomAddress = symbolMap[command.target] !== undefined;
   const isConstant = command.target == "constant";
+  const isPointer = command.target == "pointer";
   const resolveLocation = command => {
     switch(command.target){
       case "static": return "@" + filename + "." + command.value
       case "temp": return "@" + "R" + (5 + parseInt(command.value))
+      case "pointer": return "@" + (command.value == 0 ? symbolMap["this"] : symbolMap["that"])
       case "constant": return combineLines([
         "@" + command.value
       ]);
@@ -80,7 +81,7 @@ function writeAssembly(command){
           mem.deref,
           mem.write
         ] 
-        :
+        : 
         [
           stackChange("-1"),
           mem.deref,
