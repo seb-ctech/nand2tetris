@@ -36,27 +36,37 @@ function writer(command){
 
 // TODO: Return a closure that recursively goes over all commands?
 function writeAssembly(command){
-  const combineLines = lines => lines.join("\n")
-  const commandOnLocation = (command, followUp) => {
-    const symbol = symbolMap[command.location]
-    const isConstant = symbol == null
-    const resolveLocation = ["@" + (isConstant ? command.value : symbol), "D=A"]
-    return combineLines(isConstant ? resolveLocation : resolveLocation.concat(["@" + command.value, "A=D+A"], followUp))
-  }
-  const stackPointer = combineLines(["@SP", "A=M"])
+  const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
+  const isConstant = command.target == "constant"
+  const resolveLocation = command => combineLines([
+    "@" + (isConstant ? command.value : symbolMap[command.target]), 
+    "D=A", 
+    isConstant ? "" : "@" + command.value
+  ])
+  const tempPointer = "@R13"
   const mem = {read: "D=M", write: "M=D"}
   const stackChange = offset => combineLines(["@SP", "M=M" + offset])
   const commandTranslator = {
     "pop": command => combineLines(
         [
+          resolveLocation(command),
+          "D=D+A",
+          tempPointer,
+          mem.write,
           stackChange("-1"),
-          commandOnLocation(command),
+          "A=M",
+          mem.read,
+          tempPointer,
+          "A=M",
+          mem.write
         ]
       ),
     "push": command => combineLines(
         [
-          commandOnLocation(command, [mem.read]),
-          stackPointer,
+          resolveLocation(command),
+          isConstant ? "" : "A=D+A",
+          "@SP",
+          "A=M",
           mem.write,
           stackChange("+1")
         ]
