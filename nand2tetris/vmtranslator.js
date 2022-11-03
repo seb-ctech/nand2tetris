@@ -14,6 +14,14 @@ const symbolMap = {
 const input_file = process.argv[2];
 const filename = path.basename(input_file, ".vm")
 
+const assert = (assertion, onValid, error, line) => value => {
+  if(assertion(value)){
+    return onValid(value)
+  } else {
+    throw new SyntaxError(error(value), input_file, line)
+  }
+}
+
 translate(input_file);
 
 function translate(input_file){
@@ -45,7 +53,9 @@ function writeAssembly(command){
     switch(command.target){
       case "static": return "@" + filename + "." + command.value
       case "temp": return "@" + "R" + (5 + parseInt(command.value))
-      case "pointer": return "@" + (command.value == 0 ? symbolMap["this"] : symbolMap["that"])
+      case "pointer": return "@" + symbolMap[["this", "that"][
+        assert(v => v < 2, v => v, v => `pointer ${v} invalid. Pointer can only be 0 or 1`, command.code_line)(command.value)
+      ]]
       case "constant": return combineLines([
         "@" + command.value
       ]);
