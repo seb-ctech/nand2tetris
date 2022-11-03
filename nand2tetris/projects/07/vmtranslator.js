@@ -35,7 +35,6 @@ function writer(command){
   return block
 }
 
-//TODO: Implement comparison operators -> Some method to generate a UID
 function writeAssembly(command){
   const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
   const hasRandomAddress = symbolMap[command.target] !== undefined;
