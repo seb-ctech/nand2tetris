@@ -14,7 +14,6 @@ const filename = path.basename(input_file, ".vm")
 
 translate(input_file);
 
-
 function translate(input_file){
   const lines = removeComments(fs.readFileSync(input_file, 'utf8').split('\r\n'));
   const translation = lines.map( (line, i) => writer(parse(line, i))).join("\n");
@@ -63,14 +62,28 @@ function writeAssembly(command){
     offset: value => combineLines(["A=M","D=A","@" + value])
   }
   const stackChange = offset => combineLines(["@SP", "M=M" + offset])
+
+  const unaryOp = commandsToWrap => [
+    stackChange("-1"),
+    mem.deref,
+    mem.read].concat(commandsToWrap)
+    .concat([
+      stackChange("+1")
+    ])
+
+  const binaryOp = commandsToWrap => [
+    stackChange("-1"),
+    mem.deref,
+    mem.read,
+    stackChange("-1"),
+    mem.deref].concat(commandsToWrap)
+    .concat([
+      stackChange("+1")
+    ])
+
   const comparisonAlgorithmCode = (vmcommand, op) => {
     const label = buildUniqueLabel(vmcommand, command.code_line);
-    return [
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      stackChange("-1"),
-      mem.deref,
+    return binaryOp([
       "D=M-D",
       "@" + label,
       "D;" + op,
@@ -83,9 +96,8 @@ function writeAssembly(command){
       "@SP",
       mem.deref,
       "M=-1",
-      "(" + label + ".End" + ")",
-      stackChange("+1")
-    ]
+      "(" + label + ".End" + ")"
+    ])
   }
   const commandTranslator = {
     "pop": () => combineLines(
@@ -136,31 +148,15 @@ function writeAssembly(command){
           stackChange("+1")
         ])
       ),
-    "add": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      stackChange("-1"),
-      mem.deref,
-      "M=M+D",
-      stackChange("+1")
-    ]),
-    "sub": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      stackChange("-1"),
-      mem.deref,
-      "M=M-D",
-      stackChange("+1")
-    ]),
-    "neg": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      "M=-D",
-      stackChange("+1")
-    ]), 
+    "add": () => combineLines(
+      binaryOp(["M=M+D"])
+    ),
+    "sub": () => combineLines(
+      binaryOp(["M=M-D"])
+    ),
+    "neg": () => combineLines(
+      unaryOp(["M=-D"])
+    ), 
     "eq": () => combineLines(
       comparisonAlgorithmCode("eq", "JEQ")
     ),
@@ -170,31 +166,15 @@ function writeAssembly(command){
     "lt": () => combineLines(
       comparisonAlgorithmCode("lt", "JLT")
     ),
-    "and": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      stackChange("-1"),
-      mem.deref,
-      "M=M&D",
-      stackChange("+1")
-    ]), 
-    "or": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      stackChange("-1"),
-      mem.deref,
-      "M=M|D",
-      stackChange("+1")
-    ]), 
-    "not": () => combineLines([
-      stackChange("-1"),
-      mem.deref,
-      mem.read,
-      "M=!D",
-      stackChange("+1")
-    ])
+    "and": () => combineLines(
+      binaryOp(["M=M&D"])
+    ), 
+    "or": () => combineLines(
+      binaryOp(["M=M|D"])
+    ), 
+    "not": () => combineLines(
+      unaryOp(["M=!D"])
+    )
   }
   return commandTranslator[command.command]()
 }
