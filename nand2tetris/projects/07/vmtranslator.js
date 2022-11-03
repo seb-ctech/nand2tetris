@@ -17,30 +17,30 @@ translate(input_file);
 
 function translate(input_file){
   const lines = removeComments(fs.readFileSync(input_file, 'utf8').split('\r\n'));
-  const translation = lines.map(line => writer(parse(line))).join("\n");
+  const translation = lines.map( (line, i) => writer(parse(line, i))).join("\n");
   const output_file = path.join(path.dirname(input_file), filename + ".asm");
   fs.writeFileSync(output_file, translation, console.error);
 }
 
-function parse(line){
+function parse(line, i){
   const keys = ["command", "target", "value"]
   const parts = line.split(" ").map(part => part.replace(/\s./g, ""));
-  return Object.fromEntries(Object.keys(parts).map(index => [keys[index], parts[index]]))
+  const assembled_command = Object.fromEntries(Object.keys(parts).map(index => [keys[index], parts[index]]));
+  return Object.assign(assembled_command, {code_line: i});
 }
 
 function writer(command){
   const original = "// " + Object.values(command).join(" ");
   const assembly = writeAssembly(command);
-  const block = original + "\n" + assembly
+  const block = (process.argv[2] == "--no-debug" ? original + "\n" : "") + assembly
   return block
 }
 
-//TODO: Implement comparison operators
+//TODO: Implement comparison operators -> Some method to generate a UID
 function writeAssembly(command){
   const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
   const hasRandomAddress = symbolMap[command.target] !== undefined;
   const isConstant = command.target == "constant";
-  const isPointer = command.target == "pointer";
   const resolveLocation = command => {
     switch(command.target){
       case "static": return "@" + filename + "." + command.value
@@ -55,8 +55,6 @@ function writeAssembly(command){
     }
   }
   const tempPointer = "@R13"
-  const tempValueA = "@R14"
-  const tempValueB = "@R15"
   const mem = {
     read: "D=M", 
     write: "M=D",
@@ -65,6 +63,30 @@ function writeAssembly(command){
     offset: value => combineLines(["A=M","D=A","@" + value])
   }
   const stackChange = offset => combineLines(["@SP", "M=M" + offset])
+  const comparisonAlgorithmCode = (vmcommand, op) => {
+    const label = buildUniqueLabel(vmcommand, command.code_line);
+    return [
+      stackChange("-1"),
+      mem.deref,
+      mem.read,
+      stackChange("-1"),
+      mem.deref,
+      "D=M-D",
+      "@" + label,
+      "D;" + op,
+      "@SP",
+      mem.deref,
+      "M=0",
+      "@" + label + ".End",
+      "0;JMP",
+      "(" + label + ")",
+      "@SP",
+      mem.deref,
+      "M=-1",
+      "(" + label + ".End" + ")",
+      stackChange("+1")
+    ]
+  }
   const commandTranslator = {
     "pop": () => combineLines(
         hasRandomAddress ? 
@@ -139,15 +161,15 @@ function writeAssembly(command){
       "M=-D",
       stackChange("+1")
     ]), 
-    "eq": () => combineLines([
-
-    ]),
-    "gt": () => combineLines([
-
-    ]), 
-    "lt": () => combineLines([
-
-    ]),
+    "eq": () => combineLines(
+      comparisonAlgorithmCode("eq", "JEQ")
+    ),
+    "gt": () => combineLines(
+      comparisonAlgorithmCode("gt", "JGT")
+    ), 
+    "lt": () => combineLines(
+      comparisonAlgorithmCode("lt", "JLT")
+    ),
     "and": () => combineLines([
       stackChange("-1"),
       mem.deref,
@@ -182,4 +204,8 @@ function removeComments(lines){
   return lines
     .map(line => line.replace(ruleFindComments, ""))
     .filter(line => line.length > 0)
+}
+
+function buildUniqueLabel(keyword, i){
+  return filename + "." + keyword.toUpperCase() + "." + i
 }
