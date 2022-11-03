@@ -40,14 +40,16 @@ const someBinary = [
   "0101010100100111"
 ]
 
+
+
 const programs = [
-  "./add/Add.asm",
-  "./max/Max.asm",
-  "./max/MaxL.asm",
-  "./pong/Pong.asm",
-  "./pong/PongL.asm",
-  "./rect/Rect.asm",
-  "./rect/RectL.asm"
+  "./nand2tetris/projects/06/add/Add.asm",
+  "./nand2tetris/projects/06/max/Max.asm",
+  "./nand2tetris/projects/06/max/MaxL.asm",
+  "./nand2tetris/projects/06/pong/Pong.asm",
+  "./nand2tetris/projects/06/pong/PongL.asm",
+  "./nand2tetris/projects/06/rect/Rect.asm",
+  "./nand2tetris/projects/06/rect/RectL.asm"
 ]
 
 const C = {

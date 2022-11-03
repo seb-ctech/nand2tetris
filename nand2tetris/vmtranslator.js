@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
+// TODO: Add Error Handling -> throw new SyntaxError("Hello", "someFile.js", 10)
+
 const symbolMap = {
   sp: "SP",
   local: "LCL",
