@@ -31,7 +31,7 @@ function parse(line, i){
 function writer(command){
   const original = "// " + Object.values(command).join(" ");
   const assembly = writeAssembly(command);
-  const block = (process.argv[2] == "--no-debug" ? original + "\n" : "") + assembly
+  const block = (process.argv[3] == "--no-debug" ? "" : original + "\n") + assembly
   return block
 }
 
