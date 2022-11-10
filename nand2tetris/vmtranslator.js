@@ -1,7 +1,36 @@
 const fs = require('fs')
 const path = require('path')
 
-// TODO: Add Error Handling -> throw new SyntaxError("Hello", "someFile.js", 10)
+const validCommands = [
+  "pop",
+  "push",
+  "call",
+  "return",
+  "function",
+  "label",
+  "if-goto",
+  "goto",
+  "add",
+  "sub",
+  "neg",
+  "eq",
+  "gt",
+  "lt",
+  "and",
+  "or",
+  "not"
+]
+
+const validSegments = [
+  "local",
+  "static",
+  "constant",
+  "pointer",
+  "temp",
+  "this",
+  "that",
+  "argument"
+]
 
 const symbolMap = {
   sp: "SP",
@@ -11,46 +40,86 @@ const symbolMap = {
   argument: "ARG"
 }
 
-// TODO: Should I make command a class to simulate types ? 
-// A Constructor, and various getters (non mutable)
-
-// TODO INPUT Either file oder directory name indirection
-// OUTPUT: Either fileName.asm or directoryName.asm
-
-const input_file = process.argv[2];
-const filename = path.basename(input_file, ".vm")
-
-const assert = (assertion, onValid, error, line) => value => {
+const assert = (file, line) => (assertion, onValid, error) => value => {
   if(assertion(value)){
     return onValid(value)
   } else {
-    throw new SyntaxError(error(value), input_file, line)
+    throw new SyntaxError(error(value), file, line)
   }
 }
 
-translate(input_file);
+class Command {
+  constructor(string, line_number, file){
+    this.original = string;
+    this.assert = assert(file, line_number);
+    const parts = string.split(" ").map(part => part.replace(/\s./g, ""))
+    this.file = file;
+    this.line = line_number;
+    this.type = this.assert(value => validCommands.includes(value),
+      v => v,
+      v => "Command '" + v + "' is invalid or unrecognized")(parts[0]);
+    this.isMemoryCommand = this.type === "pop" || this.type === "push";
+    this.isBranchCommand = this.type === "goto" || this.type === "if-goto";
+    if(this.isMemoryCommand){
+      this.segment = this.assert(value => validSegments.includes(value),
+        v => v,
+        v => "Segment '" + v + "' is invalid or unrecognized")(parts[1]);
+      this.isConstant = this.segment === "constant";
+      this.value = this.assert(value => Number.isInteger(parseInt(value)),
+      v => v,
+      v => "Last argument is not a number or missing")(parts[2]);
+    }
+  }
 
-function translate(input_file){
-  const lines = removeComments(fs.readFileSync(input_file, 'utf8').split('\r\n'));
-  const translation = lines.map( (line, i) => writer(parse(line, i))).join("\n");
-  const output_file = path.join(path.dirname(input_file), filename + ".asm");
-  fs.writeFileSync(output_file, translation, console.error);
+  hasRandomAddress(){
+    return symbolMap[this.segment] !== undefined
+  }
+
+  resolveLocation(){
+    switch(this.segment){
+      case "static": return "@" + this.file + "." + this.value
+      case "temp": return "@" + "R" + (5 + parseInt(this.value))
+      case "pointer": return "@" + symbolMap[["this", "that"][
+        assert(this.file, this.line)(v => v < 2, v => v, v => `pointer ${v} invalid. Pointer can only be 0 or 1`)(this.value)
+      ]]
+      case "constant": return "@" + this.value
+      default: return "@" + symbolMap[this.segment]
+    }
+  }
+
+  buildUniqueLabel(){
+    return this.file + "." + this.type.toUpperCase() + "." + this.line
+  }
+
+}
+// Kinda Functor
+class InputToOutputMapper {
+  constructor(source, ext, out){
+    this.extension = "." + ext;
+    this.targetExtension = "." + out;
+    this.source = source;
+    this.dirName = path.dirname(this.source).split(path.sep).pop();
+    this.files = fs.readdirSync(this.source, "utf8")
+      .filter(file => file.endsWith(this.extension))
+      .map(file => ({
+        name: path.basename(file, this.extension),
+        dir: path.join(this.source, file)
+      }));
+    this.isDirectory = this.files.length > 1;
+  }
+
+  mapToJoinedFiles(f){
+    return this.files.map(file => f(file)).join("\n")
+  }
+
+  get out(){
+    return path.join(this.source, (this.isDirectory ? this.dirName : this.files[0].name) + this.targetExtension)
+  }
 }
 
-//TODO: Add a check for invalid symbols and add "label", "goto", "if-goto", "return", "call" and "function"
-function parse(line, i){
-  const keys = ["command", "target", "value"]
-  const parts = line.split(" ").map(part => part.replace(/\s./g, ""));
-  const assembled_command = Object.fromEntries(Object.keys(parts).map(index => [keys[index], parts[index]]));
-  return Object.assign(assembled_command, {code_line: i});
-}
+const mapper = new InputToOutputMapper(process.argv[2], "vm", "asm");
 
-function writer(command){
-  const original = "// " + Object.values(command).join(" ");
-  const assembly = writeAssembly(command);
-  const block = (process.argv[3] == "--no-debug" ? "" : original + "\n") + assembly
-  return block
-}
+const preprocess = file => removeComments(fs.readFileSync(file, 'utf8').split('\r\n'))
 
 //TODO: Needs:
 // setFileName and informs the codeWriter that a new VM File started
@@ -62,25 +131,19 @@ function writer(command){
 // writeCall
 // writeReturn
 
+const writer = command => (process.argv[3] == "--no-debug" ? "" : "// " + command.original + "\n") + writeAssembly(command)
+
+const runCompiler = () => fs.writeFileSync(
+  mapper.out, 
+  mapper.mapToJoinedFiles( file => 
+    preprocess(file.dir)
+    .map((line, i) => writer(new Command(line, i, file.name)))
+    .join("\n")), console.error);
+
+runCompiler()
+
 function writeAssembly(command){
   const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
-  const hasRandomAddress = symbolMap[command.target] !== undefined;
-  const isConstant = command.target == "constant";
-  const resolveLocation = command => {
-    switch(command.target){
-      case "static": return "@" + filename + "." + command.value
-      case "temp": return "@" + "R" + (5 + parseInt(command.value))
-      case "pointer": return "@" + symbolMap[["this", "that"][
-        assert(v => v < 2, v => v, v => `pointer ${v} invalid. Pointer can only be 0 or 1`, command.code_line)(command.value)
-      ]]
-      case "constant": return combineLines([
-        "@" + command.value
-      ]);
-      default: return combineLines([
-        "@" + symbolMap[command.target]
-      ]);
-    }
-  }
   const tempPointer = "@R13"
   const mem = {
     read: "D=M", 
@@ -89,6 +152,7 @@ function writeAssembly(command){
     deref: "A=M", 
     offset: value => combineLines(["A=M","D=A","@" + value])
   }
+
   const stackChange = offset => combineLines(["@SP", "M=M" + offset])
 
   const unaryOp = commandsToWrap => [
@@ -109,8 +173,8 @@ function writeAssembly(command){
       stackChange("+1")
     ])
 
-  const comparisonAlgorithmCode = (vmcommand, op) => {
-    const label = buildUniqueLabel(vmcommand, command.code_line);
+  const comparisonAlgorithmCode = (op) => {
+    const label = command.buildUniqueLabel();
     return binaryOp([
       "D=M-D",
       "@" + label,
@@ -127,86 +191,89 @@ function writeAssembly(command){
       "(" + label + ".End" + ")"
     ])
   }
-
-  //TODO: Give it an argument to overwrite the higher-scope command so that it can be used inside of other commands
-  const commandTranslator = {
-    "pop": () => combineLines(
-        hasRandomAddress ? 
-        [
-          resolveLocation(command),
-          mem.offset(command.value),
-          "D=D+A",
-          tempPointer,
-          mem.write,
-          stackChange("-1"),
-          mem.deref,
-          mem.read,
-          tempPointer,
-          mem.deref,
-          mem.write
-        ] 
-        : 
-        [
-          stackChange("-1"),
-          mem.deref,
-          mem.read,
-          resolveLocation(command),
-          mem.write
-        ]
-      ),
-    "push": () => combineLines(
-        (hasRandomAddress ?
-        [
-          resolveLocation(command),
-          mem.offset(command.value),
-          "A=D+A",
-          mem.read
-        ]
-        : isConstant ?
-        [
-          resolveLocation(command),
-          "D=A"
-        ]
-        :
-        [
-          resolveLocation(command),
-          mem.read
-        ]).concat([
-          "@SP",
-          mem.deref,
-          mem.write,
-          stackChange("+1")
-        ])
-      ),
-    "add": () => combineLines(
-      binaryOp(["M=M+D"])
-    ),
-    "sub": () => combineLines(
-      binaryOp(["M=M-D"])
-    ),
-    "neg": () => combineLines(
-      unaryOp(["M=-D"])
-    ), 
-    "eq": () => combineLines(
-      comparisonAlgorithmCode("eq", "JEQ")
-    ),
-    "gt": () => combineLines(
-      comparisonAlgorithmCode("gt", "JGT")
-    ), 
-    "lt": () => combineLines(
-      comparisonAlgorithmCode("lt", "JLT")
-    ),
-    "and": () => combineLines(
-      binaryOp(["M=M&D"])
-    ), 
-    "or": () => combineLines(
-      binaryOp(["M=M|D"])
-    ), 
-    "not": () => combineLines(
-      unaryOp(["M=!D"])
-    )
+  
+  const commandTranslator = command => {
+    switch(command.type){
+     case "pop": return combineLines(
+          command.hasRandomAddress() ? 
+          [
+            command.resolveLocation(),
+            mem.offset(command.value),
+            "D=D+A",
+            tempPointer,
+            mem.write,
+            stackChange("-1"),
+            mem.deref,
+            mem.read,
+            tempPointer,
+            mem.deref,
+            mem.write
+          ] 
+          : 
+          [
+            stackChange("-1"),
+            mem.deref,
+            mem.read,
+            command.resolveLocation(),
+            mem.write
+          ]
+        );
+      case "push": return combineLines(
+          (command.hasRandomAddress() ?
+          [
+            command.resolveLocation(),
+            mem.offset(command.value),
+            "A=D+A",
+            mem.read
+          ]
+          : command.isConstant ?
+          [
+            command.resolveLocation(),
+            "D=A"
+          ]
+          :
+          [
+            command.resolveLocation(),
+            mem.read
+          ]).concat([
+            "@SP",
+            mem.deref,
+            mem.write,
+            stackChange("+1")
+          ])
+        );
+      case "add": return combineLines(
+        binaryOp(["M=M+D"])
+      );
+      case "sub": return combineLines(
+        binaryOp(["M=M-D"])
+      );
+      case "neg": return combineLines(
+        unaryOp(["M=-D"])
+      ); 
+      case "eq": return combineLines(
+        comparisonAlgorithmCode("JEQ")
+      );
+      case "gt": return combineLines(
+        comparisonAlgorithmCode("JGT")
+      ); 
+      case "lt": return combineLines(
+        comparisonAlgorithmCode("JLT")
+      );
+      case "and": return combineLines(
+        binaryOp(["M=M&D"])
+      ); 
+      case "or": return combineLines(
+        binaryOp(["M=M|D"])
+      ); 
+      case "not": return combineLines(
+        unaryOp(["M=!D"])
+      );
+      default: return "not implemented yet".toUpperCase()
+    }
   }
-  return commandTranslator[command.command]()
+  console.log(command)
+  return commandTranslator(command)
 }
 
 function removeComments(lines){
@@ -214,8 +281,4 @@ function removeComments(lines){
   return lines
     .map(line => line.replace(ruleFindComments, ""))
     .filter(line => line.length > 0)
-}
-
-function buildUniqueLabel(keyword, i){
-  return filename + "." + keyword.toUpperCase() + "." + i
 }
