@@ -11,6 +11,12 @@ const symbolMap = {
   argument: "ARG"
 }
 
+// TODO: Should I make command a class to simulate types ? 
+// A Constructor, and various getters (non mutable)
+
+// TODO INPUT Either file oder directory name indirection
+// OUTPUT: Either fileName.asm or directoryName.asm
+
 const input_file = process.argv[2];
 const filename = path.basename(input_file, ".vm")
 
@@ -31,6 +37,7 @@ function translate(input_file){
   fs.writeFileSync(output_file, translation, console.error);
 }
 
+//TODO: Add a check for invalid symbols and add "label", "goto", "if-goto", "return", "call" and "function"
 function parse(line, i){
   const keys = ["command", "target", "value"]
   const parts = line.split(" ").map(part => part.replace(/\s./g, ""));
@@ -44,6 +51,16 @@ function writer(command){
   const block = (process.argv[3] == "--no-debug" ? "" : original + "\n") + assembly
   return block
 }
+
+//TODO: Needs:
+// setFileName and informs the codeWriter that a new VM File started
+// writeInit bootstrap code
+// writeLabel 
+// writeGoto
+// writeIf
+// writeFunction
+// writeCall
+// writeReturn
 
 function writeAssembly(command){
   const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
@@ -110,6 +127,8 @@ function writeAssembly(command){
       "(" + label + ".End" + ")"
     ])
   }
+
+  //TODO: Give it an argument to overwrite the higher-scope command so that it can be used inside of other commands
   const commandTranslator = {
     "pop": () => combineLines(
         hasRandomAddress ? 
