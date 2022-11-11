@@ -44,7 +44,13 @@ const assert = (file, line) => (assertion, onValid, error) => value => {
   if(assertion(value)){
     return onValid(value)
   } else {
-    throw new SyntaxError(error(value), file, line)
+    console.trace()
+    console.error({
+      error: error(value),
+      file,
+      line
+    })
+    process.exit()
   }
 }
 
@@ -98,7 +104,10 @@ class InputToOutputMapper {
     this.extension = "." + ext;
     this.targetExtension = "." + out;
     this.source = source;
-    this.dirName = path.dirname(this.source).split(path.sep).pop();
+    if(!fs.existsSync(source)){
+      throw new Error("Invalid or non existing directory")
+    }
+    this.dirName = path.basename(source);
     this.files = fs.readdirSync(this.source, "utf8")
       .filter(file => file.endsWith(this.extension))
       .map(file => ({
