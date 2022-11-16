@@ -161,6 +161,7 @@ runCompiler()
 
 function writeAssembly(command){
   const tempPointer = "@R13"
+  const endFrame = "@14"
   const mem = {
     read: "D=M", 
     write: "M=D",
@@ -219,6 +220,14 @@ function writeAssembly(command){
       stackChange("+1"),
     ]))
   )
+
+  //TODO: Refactor Stack Pointer and mem offset using this
+  const jumpAddress = offset => combineLines([
+    "D=A",
+    "@" + offset[1],
+    `D=D${offset[0]}A`,
+    "A=D",
+  ])
 
   const setArgumentPointer = nArgs => combineLines([
     "@SP",
@@ -348,10 +357,35 @@ function writeAssembly(command){
         commandTranslator(new Command ("label" + " " + command.args[0])),
         initializeFunction(command.args[1])
       ]);
+      case "return": return combineLines([
+        "@LCL",
+        mem.read,
+        endFrame,
+        mem.write,
+        stackChange("-1"),
+        "@SP",
+        mem.read,
+        "@ARG",
+        jumpAddress("+1"),
+        "D=A",
+        "@SP",
+        mem.ref,
+        combineLines(["THAT", "THIS", "ARG", "LCL"].map( (m, i) => combineLines([
+          endFrame,
+          mem.read,
+          "@" + i + 1,
+          "D=D-A",
+          "@" + m,
+          mem.write
+        ]))),
+        mem.deref,
+        mem.write,
+        endFrame,
+        jumpAddress("-5"),
+        mem.deref,
+        "0;JMP"
+      ]);
       default: return "// not implemented yet".toUpperCase()
-      // TODO: write Function
-      // TODO: write Call
-      // TODO: write Return
     } 
   }
   console.log(command)
