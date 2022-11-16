@@ -118,7 +118,7 @@ class InputToOutputMapper {
   }
 
   mapToJoinedFiles(f){
-    return this.files.map(file => f(file)).join("\n")
+    return [].concat(this.files.map(file => f(file)))
   }
 
   get out(){
@@ -127,8 +127,16 @@ class InputToOutputMapper {
 }
 
 const mapper = new InputToOutputMapper(process.argv[2], "vm", "asm");
-
-const preprocess = file => removeComments(fs.readFileSync(file, 'utf8').split('\r\n'))
+const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
+const bootstrap = [
+  "@256",
+  "D=A",
+  "@SP",
+  "M=D",
+  writeAssembly(new Command("call Sys.init", 2, "__BTSTRP"))
+]
+const load = file => fs.readFileSync(file, 'utf8').split(/\r\n/)
+const preprocess = lines => removeComments(lines)
 
 //TODO: Needs:
 // setFileName and informs the codeWriter that a new VM File started
@@ -143,16 +151,16 @@ const preprocess = file => removeComments(fs.readFileSync(file, 'utf8').split('\
 const writer = command => (process.argv[3] == "--no-debug" ? "" : "// " + command.original + "\n") + writeAssembly(command)
 
 const runCompiler = () => fs.writeFileSync(
-  mapper.out, 
-  mapper.mapToJoinedFiles( file => 
-    preprocess(file.dir)
+  mapper.out,
+  bootstrap.concat(
+  mapper.mapToJoinedFiles( file =>
+    preprocess(load(file.dir))
     .map((line, i) => writer(new Command(line, i, file.name)))
-    .join("\n")), console.error);
+  )).join("\n"), console.error);
 
 runCompiler()
 
 function writeAssembly(command){
-  const combineLines = lines => lines.filter(line => line.length > 0).join("\n")
   const tempPointer = "@R13"
   const mem = {
     read: "D=M", 
