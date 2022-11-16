@@ -40,6 +40,11 @@ const symbolMap = {
   argument: "ARG"
 }
 
+const trace = message => value => {
+  console.log(message, value);
+  return value;
+}
+
 const assert = (file, line) => (assertion, onValid, error) => value => {
   if(assertion(value)){
     return onValid(value)
@@ -58,7 +63,7 @@ class Command {
   constructor(string, line_number, file){
     this.original = string;
     this.assert = assert(file, line_number);
-    const parts = string.split(" ").map(part => part.replace(/\s./g, ""))
+    const parts = string.split(" ").map(part => part.replace(/\s./g, "").replace(/\t/g, ""))
     this.file = file;
     this.line = line_number;
     this.type = this.assert(value => validCommands.includes(value),
@@ -74,6 +79,10 @@ class Command {
       this.value = this.assert(value => Number.isInteger(parseInt(value)),
       v => v,
       v => "Last argument is not a number or missing")(parts[2]);
+    } else if (this.isBranchCommand){
+      this.target = parts[1]
+    } else {
+      this.arguments = parts.slice(1);
     }
   }
 
@@ -118,7 +127,7 @@ class InputToOutputMapper {
   }
 
   mapToJoinedFiles(f){
-    return [].concat(this.files.map(file => f(file)))
+    return [].concat(...this.files.map(file => f(file)))
   }
 
   get out(){
@@ -137,16 +146,6 @@ const bootstrap = [
 ]
 const load = file => fs.readFileSync(file, 'utf8').split(/\r\n/)
 const preprocess = lines => removeComments(lines)
-
-//TODO: Needs:
-// setFileName and informs the codeWriter that a new VM File started
-// writeInit bootstrap code
-// writeLabel 
-// writeGoto
-// writeIf
-// writeFunction
-// writeCall
-// writeReturn
 
 const writer = command => (process.argv[3] == "--no-debug" ? "" : "// " + command.original + "\n") + writeAssembly(command)
 
@@ -286,8 +285,14 @@ function writeAssembly(command){
       case "not": return combineLines(
         unaryOp(["M=!D"])
       );
+      case "label": return command.arguments[0] + ":";
       default: return "not implemented yet".toUpperCase()
-    }
+      // TODO: write Goto
+      // TODO: write If
+      // TODO: write Function
+      // TODO: write Call
+      // TODO: write Return
+    } 
   }
   console.log(command)
   return commandTranslator(command)
