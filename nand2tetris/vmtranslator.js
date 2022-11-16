@@ -131,7 +131,7 @@ class InputToOutputMapper {
   }
 
   get out(){
-    return path.join(this.source, (this.isDirectory ? this.dirName : this.files[0].name) + this.targetExtension)
+    return path.join(this.source, this.dirName + this.targetExtension)
   }
 }
 
@@ -358,13 +358,18 @@ function writeAssembly(command){
         initializeFunction(command.args[1])
       ]);
       case "return": return combineLines([
+        // endFrame = LCL 
         "@LCL",
         mem.read,
         endFrame,
         mem.write,
+        // *ARG = pop()
         stackChange("-1"),
         "@SP",
         mem.read,
+        mem.deref,
+        mem.write,
+        // SP = ARG + 1
         "@ARG",
         jumpAddress("+1"),
         "D=A",
@@ -378,8 +383,7 @@ function writeAssembly(command){
           "@" + m,
           mem.write
         ]))),
-        mem.deref,
-        mem.write,
+        //goto retAddr
         endFrame,
         jumpAddress("-5"),
         mem.deref,
