@@ -233,7 +233,7 @@ function writeAssembly(command){
 
     const initializeFunction = nArgs => combineLines(
       Array.from({length: nArgs}, (_, i) => i)
-      .map(combineLines([
+      .map(i => combineLines([
         commandTranslator(new Command("push constant 0", command.line, command.file)),
         commandTranslator(new Command("pop local" + " " + i, command.line, command.file))
       ]))
@@ -343,6 +343,10 @@ function writeAssembly(command){
         mem.write,
         commandTranslator(new Command ("goto" + " " + command.args[0])),
         commandTranslator(new Command ("label" + " " + buildReturnAddress(command.args[0], 1), command.line, command.file))
+      ]);
+      case "function": return combineLines([
+        commandTranslator(new Command ("label" + " " + command.args[0])),
+        initializeFunction(command.args[1])
       ]);
       default: return "// not implemented yet".toUpperCase()
       // TODO: write Function
