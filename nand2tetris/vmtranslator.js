@@ -151,11 +151,13 @@ const writer = command => (process.argv[3] == "--no-debug" ? "" : "// " + comman
 
 const runCompiler = () => fs.writeFileSync(
   mapper.out,
-  bootstrap.concat(
+  // bootstrap.concat(
   mapper.mapToJoinedFiles( file =>
     preprocess(load(file.dir))
     .map((line, i) => writer(new Command(line, i, file.name)))
-  )).join("\n"), console.error);
+  )
+  // )
+  .join("\n"), console.error);
 
 runCompiler()
 
@@ -216,6 +218,7 @@ function writeAssembly(command){
       "@" + m,
       mem.read,
       "@SP",
+      mem.deref,
       mem.write,
       stackChange("+1"),
     ]))
@@ -366,20 +369,25 @@ function writeAssembly(command){
         // *ARG = pop()
         stackChange("-1"),
         "@SP",
+        mem.deref,
         mem.read,
+        "@ARG",
         mem.deref,
         mem.write,
         // SP = ARG + 1
         "@ARG",
-        jumpAddress("+1"),
-        "D=A",
+        mem.read,
+        "@1",
+        "D=D+A",
         "@SP",
-        mem.ref,
+        mem.write,
         combineLines(["THAT", "THIS", "ARG", "LCL"].map( (m, i) => combineLines([
           endFrame,
           mem.read,
-          "@" + i + 1,
+          "@" + (i + 1),
           "D=D-A",
+          "A=D",
+          "D=M",
           "@" + m,
           mem.write
         ]))),
