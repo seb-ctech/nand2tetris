@@ -2,7 +2,7 @@
 D=A
 @SP
 M=D
-NOT IMPLEMENTED YET
+// NOT IMPLEMENTED YET
 // push constant 0    
 @0
 D=A
@@ -27,7 +27,7 @@ D=M
 A=M
 M=D
 // label LOOP_START
-LOOP_START:
+(LOOP_START)
 // push argument 0    
 @ARG
 A=M
@@ -137,7 +137,12 @@ M=D
 @SP
 M=M+1
 // if-goto LOOP_START  
-NOT IMPLEMENTED YET
+@SP
+M=M-1
+A=M
+D=M
+@LOOP_START
+D;JNE
 // push local 0
 @LCL
 A=M

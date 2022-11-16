@@ -285,10 +285,20 @@ function writeAssembly(command){
       case "not": return combineLines(
         unaryOp(["M=!D"])
       );
-      case "label": return command.arguments[0] + ":";
-      default: return "not implemented yet".toUpperCase()
-      // TODO: write Goto
-      // TODO: write If
+      case "label": return "(" + command.arguments[0] + ")";
+      case "goto": return combineLines([
+        "@" + command.target,
+        "0;JMP"    
+      ]);
+      // Jumps to Label if popped value is not 0
+      case "if-goto": return combineLines([
+        stackChange("-1"),
+        mem.deref,
+        mem.read,
+        "@" + command.target,
+        "D;JNE"  
+      ]);
+      default: return "// not implemented yet".toUpperCase()
       // TODO: write Function
       // TODO: write Call
       // TODO: write Return
