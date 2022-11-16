@@ -82,7 +82,7 @@ class Command {
     } else if (this.isBranchCommand){
       this.target = parts[1]
     } else {
-      this.arguments = parts.slice(1);
+      this.args = parts.slice(1);
     }
   }
 
@@ -207,8 +207,39 @@ function writeAssembly(command){
       "(" + label + ".End" + ")"
     ])
   }
+
+  const buildReturnAddress = (functionName, i) => `${functionName}$ret.${i}`
+
+  const saveCurrentFrame = combineLines(
+    ["LCL", "ARG", "THIS", "THAT"].map( m => combineLines([
+      "@" + m,
+      mem.read,
+      "@SP",
+      mem.write,
+      stackChange("+1"),
+    ]))
+  )
+
+  const setArgumentPointer = nArgs => combineLines([
+    "@SP",
+    "D=A",
+    "@" + (5 + nArgs),
+    "D=D-A",
+    "@ARG",
+    mem.write
+  ])
   
   const commandTranslator = command => {
+
+    const initializeFunction = nArgs => combineLines(
+      Array.from({length: nArgs}, (_, i) => i)
+      .map(combineLines([
+        commandTranslator(new Command("push constant 0", command.line, command.file)),
+        commandTranslator(new Command("pop local" + " " + i, command.line, command.file))
+      ]))
+    )
+
+
     switch(command.type){
      case "pop": return combineLines(
           command.hasRandomAddress() ? 
@@ -285,7 +316,7 @@ function writeAssembly(command){
       case "not": return combineLines(
         unaryOp(["M=!D"])
       );
-      case "label": return "(" + command.arguments[0] + ")";
+      case "label": return "(" + command.args[0] + ")";
       case "goto": return combineLines([
         "@" + command.target,
         "0;JMP"    
@@ -297,6 +328,21 @@ function writeAssembly(command){
         mem.read,
         "@" + command.target,
         "D;JNE"  
+      ]);
+      case "call": return combineLines([
+        "@" + buildReturnAddress(command.args[0], 1),
+        "D=A",
+        "@SP",
+        mem.write,
+        stackChange("+1"),
+        saveCurrentFrame,
+        setArgumentPointer(command.args[1]),
+        "@SP",
+        mem.read,
+        "@LCL",
+        mem.write,
+        commandTranslator(new Command ("goto" + " " + command.args[0])),
+        commandTranslator(new Command ("label" + " " + buildReturnAddress(command.args[0], 1), command.line, command.file))
       ]);
       default: return "// not implemented yet".toUpperCase()
       // TODO: write Function
