@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { PassThrough } = require('stream')
 
 const validCommands = [
   "pop",
@@ -59,6 +60,7 @@ const assert = (file, line) => (assertion, onValid, error) => value => {
   }
 }
 
+//TODO: Command needs to be aware of the current function he is in to label its target correctly
 class Command {
   constructor(string, line_number, file){
     this.original = string;
@@ -126,6 +128,10 @@ class InputToOutputMapper {
     this.isDirectory = this.files.length > 1;
   }
 
+  hasSys(){
+    return this.files.some( file => path.basename(file.name) === "Sys" )
+  }
+
   mapToJoinedFiles(f){
     return [].concat(...this.files.map(file => f(file)))
   }
@@ -142,22 +148,23 @@ const bootstrap = [
   "D=A",
   "@SP",
   "M=D",
-  writeAssembly(new Command("call Sys.init", 2, "__BTSTRP"))
+  writeAssembly(new Command("call Sys.init 0", 2, "__BTSTRP"))
 ]
 const load = file => fs.readFileSync(file, 'utf8').split(/\r\n/)
 const preprocess = lines => removeComments(lines)
 
 const writer = command => (process.argv[3] == "--no-debug" ? "" : "// " + command.original + "\n") + writeAssembly(command)
 
-const runCompiler = () => fs.writeFileSync(
-  mapper.out,
-  // bootstrap.concat(
-  mapper.mapToJoinedFiles( file =>
+const runCompiler = () => {
+  const code = mapper.mapToJoinedFiles( file =>
     preprocess(load(file.dir))
     .map((line, i) => writer(new Command(line, i, file.name)))
   )
-  // )
-  .join("\n"), console.error);
+  fs.writeFileSync(
+  mapper.out,
+  (mapper.hasSys() ? bootstrap.concat(code) : code).join("\n")
+  , console.error);
+}
 
 runCompiler()
 
@@ -234,8 +241,8 @@ function writeAssembly(command){
 
   const setArgumentPointer = nArgs => combineLines([
     "@SP",
-    "D=A",
-    "@" + (5 + nArgs),
+    "D=M",
+    "@" + (5 + parseInt(nArgs)),
     "D=D-A",
     "@ARG",
     mem.write
@@ -342,9 +349,10 @@ function writeAssembly(command){
         "D;JNE"  
       ]);
       case "call": return combineLines([
-        "@" + buildReturnAddress(command.args[0], 1),
+        "@" + buildReturnAddress(command.args[0], command.line),
         "D=A",
         "@SP",
+        mem.deref,
         mem.write,
         stackChange("+1"),
         saveCurrentFrame,
@@ -354,7 +362,7 @@ function writeAssembly(command){
         "@LCL",
         mem.write,
         commandTranslator(new Command ("goto" + " " + command.args[0])),
-        commandTranslator(new Command ("label" + " " + buildReturnAddress(command.args[0], 1), command.line, command.file))
+        commandTranslator(new Command ("label" + " " + buildReturnAddress(command.args[0], command.line), command.line, command.file))
       ]);
       case "function": return combineLines([
         commandTranslator(new Command ("label" + " " + command.args[0])),
@@ -399,6 +407,7 @@ function writeAssembly(command){
       ]);
       default: return "// not implemented yet".toUpperCase()
     } 
+    //FIXME: Functions seem not to return correctly
   }
   console.log(command)
   return commandTranslator(command)
