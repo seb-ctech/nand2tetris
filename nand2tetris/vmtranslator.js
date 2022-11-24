@@ -171,6 +171,7 @@ runCompiler()
 function writeAssembly(command){
   const tempPointer = "@R13"
   const endFrame = "@14"
+  const ret = "@15"
   const mem = {
     read: "D=M", 
     write: "M=D",
@@ -232,8 +233,8 @@ function writeAssembly(command){
   )
 
   //TODO: Refactor Stack Pointer and mem offset using this
-  const jumpAddress = offset => combineLines([
-    "D=A",
+  const jumpAddress = (offset, pointer) => combineLines([
+    pointer ? "D=M" : "D=A",
     "@" + offset[1],
     `D=D${offset[0]}A`,
     "A=D",
@@ -253,8 +254,7 @@ function writeAssembly(command){
     const initializeFunction = nArgs => combineLines(
       Array.from({length: nArgs}, (_, i) => i)
       .map(i => combineLines([
-        commandTranslator(new Command("push constant 0", command.line, command.file)),
-        commandTranslator(new Command("pop local" + " " + i, command.line, command.file))
+        commandTranslator(new Command("push constant 0", command.line, command.file))
       ]))
     )
 
@@ -374,6 +374,12 @@ function writeAssembly(command){
         mem.read,
         endFrame,
         mem.write,
+        // RET = *(FRAME-5)
+        endFrame,
+        jumpAddress("-5", true),
+        mem.read,
+        ret,
+        mem.write,
         // *ARG = pop()
         stackChange("-1"),
         "@SP",
@@ -389,6 +395,7 @@ function writeAssembly(command){
         "D=D+A",
         "@SP",
         mem.write,
+        // Restore Pointers
         combineLines(["THAT", "THIS", "ARG", "LCL"].map( (m, i) => combineLines([
           endFrame,
           mem.read,
@@ -400,8 +407,7 @@ function writeAssembly(command){
           mem.write
         ]))),
         //goto retAddr
-        endFrame,
-        jumpAddress("-5"),
+        ret,
         mem.deref,
         "0;JMP"
       ]);
