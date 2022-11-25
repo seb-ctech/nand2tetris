@@ -140,3 +140,21 @@
 - the number and type of arguments must match with those of the subroutines parameters passed
 - Each argument can be an expression 
 - methods can be called within the scope of an object without the Class prefix. Functions need to use the Class.function syntax.
+
+
+## App Structure
+
+- App needs a Main class with a main subroutine
+- Folder has the name of the app
+
+#### OS Outputs
+
+- Screen: 256 Rows of 512 pixels, b&w
+- Screen class
+
+#### OS Inputs
+
+- Standard Keyboard -> Keyboard class
+- Keyboard.keypress returns the currently pressed keycode pressed
+
+![Character Set](./characterset.PNG)
