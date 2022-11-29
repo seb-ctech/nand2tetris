@@ -28,24 +28,22 @@ class Square {
 
    /** Draws the square on the screen. */
    method void draw() {
-      var int capX;
       do Screen.setColor(true);
-      let capX = keepOnScreen(x);
-      do Screen.drawRectangle(capX, y, xsize, ysize);
+      do Screen.drawRectangle(keepOnScreen(x), y, x + xsize, y + ysize);
       return;
    }
 
    method int keepOnScreen(int a) {
       var int maxX, minX;
       let maxX = Math.max(a, 0);
-      let minX = Math.min( (maxX + xsize), 500);
+      let minX = Math.min( (maxX + xsize), 512);
       return minX;
    }
 
    /** Erases the square from the screen. */
    method void erase() {
       do Screen.setColor(false);
-      do Screen.drawRectangle(x, y, xsize, ysize);
+      do Screen.drawRectangle(x, y, x + xsize, y + ysize);
       return;
    }
 
