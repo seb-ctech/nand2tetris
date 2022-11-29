@@ -23,7 +23,7 @@ class Fighter {
   }
 
   method void setPosition(int _x, int _y){
-    body.setPosition(_x, _y);
+    do body.setPosition(_x, _y);
     return;
   }
 
@@ -35,7 +35,9 @@ class Fighter {
 
   method int getTargetDir(){
     var int offset;
-    let offset = x - target.getBody().getX();
+    var Square targetBody;
+    let targetBody = target.getBody();
+    let offset = body.getX() - targetBody.getX();
     if (offset < 0){ return -1; }
     else { return 1; }
   }
@@ -54,11 +56,12 @@ class Fighter {
         let wasHit = true;
       }
       if (hit.finished()){
-        activeHit = false;
-        hit.dispose();
+        let activeHit = false;
+        do hit.dispose();
       }
     }
     do body.draw();
+    return;
   }
 
   method void handleInput(char key){
@@ -71,7 +74,7 @@ class Fighter {
     }
     // C -> Quick Hit
     if(key = 67) {
-      do tryAttack(false)
+      do tryAttack(false);
     }
     // Left Arrow -> Move Left
     if (key = 130){
@@ -81,17 +84,24 @@ class Fighter {
     if (key = 132){
       do move(1);
     }
+    return;
   }
 
   method void move(int dir){
     var int newX;
+    var int originalY;
+    var Square targetBody;
+
+    let originalY = body.getY();
     let newX = body.getX() + (dir * speed);
     
-    if( (newX > -200) & (newX + w < 1200)){
-      let x = newX;
+    if( (newX > -200) & ( (newX + body.getSizeX()) < 1200)){
+      do body.setPosition(newX, originalY);
     } 
+    
+    let targetBody = target.getBody();
 
-    if( ((dir < 0) & (target.getX() > x)) | ( (dir > 0) & (target.getX() < x) ) ){
+    if( ((dir < 0) & (targetBody.getX() > body.getX())) | ( (dir > 0) & (targetBody.getX() < body.getX()) ) ){
       let blocking = true;
     }
 
@@ -106,6 +116,7 @@ class Fighter {
         do attackQuick();
       }
     }
+    return;
   }
 
   method void attackQuick(){

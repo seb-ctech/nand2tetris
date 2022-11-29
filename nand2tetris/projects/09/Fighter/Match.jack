@@ -6,7 +6,8 @@ class Match {
   constructor Match new(){
     let Player = Fighter.new();
     let Bot = Fighter.new();
-    let ai = AIController.new(Bot, Player);
+    let ai = AIController.new(Bot);
+    return this;
   }
 
   method void dispose() {
@@ -18,8 +19,8 @@ class Match {
 
   method void beginMatch(){
 
-    do Player.setPosition();
-    do Bot.setPosition();
+    do Player.setPosition(120, 50);
+    do Bot.setPosition(340, 50);
     do Player.setOpponent(Bot);
     do Bot.setOpponent(Player);
     return;
@@ -35,7 +36,7 @@ class Match {
 
       let key = Keyboard.keyPressed();
       if (key = 81) { let exit = true; } // Q Key -> Quit
-      else { do Player.handleInput(key)}
+      else { do Player.handleInput(key); }
       do ai.update();
       do Bot.update();
       do Player.update();

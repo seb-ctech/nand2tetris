@@ -28,16 +28,16 @@ class Square {
 
    /** Draws the square on the screen. */
    method void draw() {
-      do Screen.setColor(true);
       var int capX;
-      let capX = keepOnScreen(x)
+      do Screen.setColor(true);
+      let capX = keepOnScreen(x);
       do Screen.drawRectangle(capX, y, xsize, ysize);
       return;
    }
 
-   method int keepOnScreen(x) {
+   method int keepOnScreen(int a) {
       var int maxX, minX;
-      let maxX = Math.max(x, 0);
+      let maxX = Math.max(a, 0);
       let minX = Math.min( (maxX + xsize), 500);
       return minX;
    }
@@ -62,6 +62,8 @@ class Square {
    }
 
    method boolean collides(Square other){
+      var boolean isCollide;
+      var int left, leftB, right, rightB, top, topB, bottom, bottomB;
       let left = x;
       let leftB = other.getX();
       let right = x + xsize;
@@ -72,10 +74,10 @@ class Square {
       let bottomB = topB + other.getSizeY();
 
       let isCollide = 
-        ( (leftB < right) & (bottomB > top) ) 
+      ( ( (leftB < right) & (bottomB > top) ) 
       | ( (right > leftB) & (bottom > topB) ) 
       | ( (left < rightB) & (bottom > topB) ) 
-      | ( (left < rightB) & (top < bottomB) )      
+      | ( (left < rightB) & (top < bottomB) ) );     
 
       return isCollide;
 
