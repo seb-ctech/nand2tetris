@@ -2,7 +2,7 @@ class AIController {
 
   field Fighter pawn, opponent;
 
-  constructor AIController new(Figher fighter){
+  constructor AIController new(Fighter fighter){
     let pawn = fighter;
     return this;
   }

@@ -12,7 +12,7 @@ class Fighter {
   constructor Fighter new(){
     let wasHit = false;
     let activeHit = false;
-    let speed = 4;
+    let speed = 1;
     let body = Square.new(0, 0, 40, 60);
     return this;
   }
@@ -44,7 +44,9 @@ class Fighter {
 
   method void dispose() {
       do body.dispose();
-      do hit.dispose();
+      if(activeHit){
+        do  hit.dispose();
+      }
       do Memory.deAlloc(this);
       return;
    }

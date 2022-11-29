@@ -44,7 +44,7 @@ class Match {
       if (Player.dead() | Bot.dead()){
         let exit = true;
       }
-
+      do Sys.wait(20);
     }
 
     return;

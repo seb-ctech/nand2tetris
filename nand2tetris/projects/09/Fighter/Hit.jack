@@ -5,7 +5,7 @@
 
 class Hit {
 
-  field Player castingPlayer;
+  field Fighter castingFighter;
   field boolean strong;
   field boolean isBuildUp;
   field boolean isActive;
@@ -16,8 +16,8 @@ class Hit {
   field int activeCounter;
   field int dir;
 
-  constructor Hit new(Player caster, boolean isStrong){
-    let castingPlayer = caster;
+  constructor Hit new(Fighter caster, boolean isStrong){
+    let castingFighter = caster;
     let strong = isStrong;
     let isBuildUp = true;
     let isActive = false;
@@ -30,6 +30,7 @@ class Hit {
     }
     let dir = caster.getTargetDir();
     let activeCounter = 0;
+    let body = Square.new(0, 0, 0, 20);
     return this;
   }
 
@@ -41,6 +42,8 @@ class Hit {
   method boolean finished() { return isFinish; }
 
   method void update(){
+    do Output.printString("update hit...");
+    do Output.println();
     if(isBuildUp){
       do buildUp();
     } else {
@@ -55,7 +58,7 @@ class Hit {
     return; 
   }
 
-  method boolean hits(Figher f){
+  method boolean hits(Fighter f){
     var Square ob;
     let ob = f.getBody();
     return (body.collides(ob));
@@ -77,7 +80,7 @@ class Hit {
     var int attachmentX;
     var int attachmentY;
     var Square casterBody;
-    let casterBody = caster.getBody();
+    let casterBody = castingFighter.getBody();
     let attachmentY = casterBody.getY() + 10;
     if (dir > 0){
       let attachmentX = casterBody.getRight(); 
