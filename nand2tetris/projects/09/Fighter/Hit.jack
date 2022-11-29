@@ -11,20 +11,24 @@ class Hit {
   field boolean isActive;
   field boolean isFinish;
   field Square body;
-  field int reach, reachStrong;
-  field int durationDA, durationStrongDA;
+  field int reach;
+  field int duration;
   field int activeCounter;
-
+  field int dir;
 
   constructor Hit new(Player caster, boolean isStrong){
     let castingPlayer = caster;
     let strong = isStrong;
     let isBuildUp = true;
     let isDamage = false;
-    let reach = 8;
-    let reachStrong = 15;
-    let durationDA = 2;
-    let durationStrongDA = 4;
+    if(isStrong){
+      let reach = 28;
+      let duration = 24;
+    } else {
+      let reach = 16;
+      let duration = 14;
+    }
+    let dir = caster.getTargetDir();
     let activeCounter = 0;
     return this;
   }
@@ -36,13 +40,17 @@ class Hit {
 
   method boolean finished() { return isFinish; }
 
-  method void update(int fighterX, int targetX){
-    do body.erase();
-    var int r, var int d;
-    if(strong){
-      let r = reachStrong;
-      let d = durationDAStrong;
+  method void update(){;
+    if(isBuildUp){
+      do buildUp();
+    } else {
+      if(isActive){
+        do active();
+      } else {
+        do release();
+      }
     }
+    do updateAttachment();
     do body.draw();
     return; 
   }
@@ -54,14 +62,45 @@ class Hit {
   }
 
   method void buildUp(){
+    var int width = body.getSizeX();
+    if(width < reach){
+      do body.setWidth(width + 4);
+    } else {
+      let isBuildUp = false;
+      let isActive = true;
+    }
     return; 
   }
 
+  method void updateAttachment(){
+    var int attachmentX;
+    var int attachmentY;
+    let attachmentY = caster.getBody().getY() + 10;
+    if (dir > 0){
+      let attachmentX = caster.getBody().getRight(); 
+    } else {
+      let attachmentX = caster.getBody().getX() - body.getSizeX();
+    }
+    do body.setPosition(attachmentX, attachmentY);
+    return;
+  }
+
   method void release(){
+    var int width = body.getSizeX();
+    if(width < reach){
+      do body.setWidth(width - 6);
+    } else {
+      let isFinish = true;
+    }
     return; 
   }
 
   method void active(){
+    if(activeCounter < duration){
+      let activeCounter = activeCounter + 1;
+    } else {
+      let isActive = false; 
+    }
     return; 
   }
 

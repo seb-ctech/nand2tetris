@@ -50,6 +50,7 @@ class Square {
    }
 
    method void setPosition(int _x, int _y) {
+      do erase();
       let x = _x;
       let y = _y;
       return;

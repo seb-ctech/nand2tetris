@@ -1,7 +1,5 @@
 class Fighter {
 
-  field int x, y;
-  field int w, h;
   field boolean wasHit;
   field boolean activeHit;
   field boolean isPlayer;
@@ -11,33 +9,36 @@ class Fighter {
   field int speed;
   field Hit hit;
 
-  constructor Fighter new(boolean playerControlled){
-    let isPlayer = playerControlled;
-    let x = 0;
-    let y = 0;
+  constructor Fighter new(){
     let wasHit = false;
     let activeHit = false;
     let speed = 4;
-    let body = Square.new(x, y, w, h);
+    let body = Square.new(0, 0, 40, 60);
     return this;
   }
 
   method void setOpponent(Fighter other){
     let target = other;
-    return;s
+    return;
   }
 
   method void setPosition(int _x, int _y){
-    let x = _x;
-    let y = _y;
+    body.setPosition(_x, _y);
     return;
   }
 
   method boolean dead(){ return wasHit; }
 
-  method boolean getBody() { return body; }
+  method Square getBody() { return body; }
 
   method boolean isBlocking(){ return blocking; }
+
+  method int getTargetDir(){
+    var int offset;
+    let offset = x - target.getBody().getX();
+    if (offset < 0){ return -1; }
+    else { return 1; }
+  }
 
   method void dispose() {
       do body.dispose();
@@ -47,12 +48,14 @@ class Fighter {
    }
 
   method void update(){
-    do body.erase();
-    do body.setPosition(x, y);
     if (activeHit){
-      do hit.update(x, target.getX());
+      do hit.update();
       if(hit.hits(target) & (~ blocking)){
         let wasHit = true;
+      }
+      if (hit.finished()){
+        activeHit = false;
+        hit.dispose();
       }
     }
     do body.draw();
@@ -63,14 +66,12 @@ class Fighter {
     // Spacebar -> Strong Hit
     if(key = 32) {
       if (~ (activeHit)){
-        do attackStrong();
+        do tryAttack(false);
       }
     }
     // C -> Quick Hit
     if(key = 67) {
-      if (~ (activeHit)){
-        do attackStrong();
-      }
+      do tryAttack(false)
     }
     // Left Arrow -> Move Left
     if (key = 130){
@@ -84,7 +85,7 @@ class Fighter {
 
   method void move(int dir){
     var int newX;
-    let newX = x + (dir * speed);
+    let newX = body.getX() + (dir * speed);
     
     if( (newX > -200) & (newX + w < 1200)){
       let x = newX;
@@ -97,14 +98,24 @@ class Fighter {
     return;
   }
 
+  method void tryAttack(boolean s){
+    if (~ (activeHit)){
+      if(s){
+        do attackStrong();
+      } else {
+        do attackQuick();
+      }
+    }
+  }
+
   method void attackQuick(){
-    let hit = Hit.new(false);
+    let hit = Hit.new(this, false);
     let activeHit = true;
     return;
   }
 
   method void attackStrong(){
-    let hit = Hit.new(true);
+    let hit = Hit.new(this, true);
     let activeHit = true;
     return;
   }

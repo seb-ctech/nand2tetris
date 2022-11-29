@@ -1,0 +1,20 @@
+class AIController {
+
+  field Fighter pawn, opponent;
+
+  constructor AIController new(Figher fighter){
+    let pawn = fighter;
+    return this;
+  }
+
+  method void dispose(){
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method void update(){
+
+    return;
+  }
+
+}
