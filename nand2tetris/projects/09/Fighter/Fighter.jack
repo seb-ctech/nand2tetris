@@ -1,0 +1,112 @@
+class Fighter {
+
+  field int x, y;
+  field int w, h;
+  field boolean wasHit;
+  field boolean activeHit;
+  field boolean isPlayer;
+  field boolean blocking;
+  field Square body;
+  field Fighter target;
+  field int speed;
+  field Hit hit;
+
+  constructor Fighter new(boolean playerControlled){
+    let isPlayer = playerControlled;
+    let x = 0;
+    let y = 0;
+    let wasHit = false;
+    let activeHit = false;
+    let speed = 4;
+    let body = Square.new(x, y, w, h);
+    return this;
+  }
+
+  method void setOpponent(Fighter other){
+    let target = other;
+    return;s
+  }
+
+  method void setPosition(int _x, int _y){
+    let x = _x;
+    let y = _y;
+    return;
+  }
+
+  method boolean dead(){ return wasHit; }
+
+  method boolean getBody() { return body; }
+
+  method boolean isBlocking(){ return blocking; }
+
+  method void dispose() {
+      do body.dispose();
+      do hit.dispose();
+      do Memory.deAlloc(this);
+      return;
+   }
+
+  method void update(){
+    do body.erase();
+    do body.setPosition(x, y);
+    if (activeHit){
+      do hit.update(x, target.getX());
+      if(hit.hits(target) & (~ blocking)){
+        let wasHit = true;
+      }
+    }
+    do body.draw();
+  }
+
+  method void handleInput(char key){
+    let blocking = false;
+    // Spacebar -> Strong Hit
+    if(key = 32) {
+      if (~ (activeHit)){
+        do attackStrong();
+      }
+    }
+    // C -> Quick Hit
+    if(key = 67) {
+      if (~ (activeHit)){
+        do attackStrong();
+      }
+    }
+    // Left Arrow -> Move Left
+    if (key = 130){
+      do move(-1);
+    }
+    // Right Arrow -> Move Right
+    if (key = 132){
+      do move(1);
+    }
+  }
+
+  method void move(int dir){
+    var int newX;
+    let newX = x + (dir * speed);
+    
+    if( (newX > -200) & (newX + w < 1200)){
+      let x = newX;
+    } 
+
+    if( ((dir < 0) & (target.getX() > x)) | ( (dir > 0) & (target.getX() < x) ) ){
+      let blocking = true;
+    }
+
+    return;
+  }
+
+  method void attackQuick(){
+    let hit = Hit.new(false);
+    let activeHit = true;
+    return;
+  }
+
+  method void attackStrong(){
+    let hit = Hit.new(true);
+    let activeHit = true;
+    return;
+  }
+
+}

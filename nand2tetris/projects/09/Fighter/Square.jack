@@ -1,0 +1,83 @@
+class Square {
+
+   field int x, y; // screen location of the square's top-left corner
+   field int xsize, ysize; // length of this square, in pixels
+
+   /** Constructs a new square with a given location and size. */
+   constructor Square new(int Ax, int Ay, int _xsize, int _ysize) {
+      let x = Ax;
+      let y = Ay;
+      let xsize = _xsize;
+      let ysize = _ysize;
+      do draw();
+      return this;
+   }
+
+   method int getX(){ return x; }
+   method int getY(){ return y; }
+   method int getSizeX(){ return xsize; }
+   method int getSizeY() { return ysize; }
+   method int getRight(){ return x + xsize; }
+   method int getBottom(){ return y + ysize; }
+
+   /** Disposes this square. */
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   /** Draws the square on the screen. */
+   method void draw() {
+      do Screen.setColor(true);
+      var int capX;
+      let capX = keepOnScreen(x)
+      do Screen.drawRectangle(capX, y, xsize, ysize);
+      return;
+   }
+
+   method int keepOnScreen(x) {
+      var int maxX, minX;
+      let maxX = Math.max(x, 0);
+      let minX = Math.min( (maxX + xsize), 500);
+      return minX;
+   }
+
+   /** Erases the square from the screen. */
+   method void erase() {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(x, y, xsize, ysize);
+      return;
+   }
+
+   method void setPosition(int _x, int _y) {
+      let x = _x;
+      let y = _y;
+      return;
+   }
+
+   method void setWidth(int _w){
+      let xsize = _w;
+      return;
+   }
+
+   method boolean collides(Square other){
+      let left = x;
+      let leftB = other.getX();
+      let right = x + xsize;
+      let rightB = leftB + other.getSizeX();
+      let top = y;
+      let topB = other.getY();
+      let bottom = y + ysize;
+      let bottomB = topB + other.getSizeY();
+
+      let isCollide = 
+        ( (leftB < right) & (bottomB > top) ) 
+      | ( (right > leftB) & (bottom > topB) ) 
+      | ( (left < rightB) & (bottom > topB) ) 
+      | ( (left < rightB) & (top < bottomB) )      
+
+      return isCollide;
+
+   }
+
+}

@@ -1,0 +1,12 @@
+class Main {
+
+  function void main(){
+    var Match match;
+    let match = Match.new();
+    do match.run();
+    do match.dispose();
+    return;
+  }
+
+
+}

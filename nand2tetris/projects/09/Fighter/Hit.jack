@@ -1,0 +1,68 @@
+// A Hit is a square spawned from the fighter.
+// It can be small or large. Small hits require less time to spawn and despawn.
+// Long hits require longer time to spawn and despawn.
+// While a hit is active it will block the fighter from casting a new hit.
+
+class Hit {
+
+  field boolean strong;
+  field Player castingPlayer;
+  field boolean isBuildUp;
+  field boolean isActive;
+  field boolean isFinish;
+  field Square body;
+  field int reach, reachStrong;
+  field int durationDA, durationStrongDA;
+  field int activeCounter;
+
+
+  constructor Hit new(Player caster, boolean isStrong){
+    let castingPlayer = caster;
+    let strong = isStrong;
+    let isBuildUp = true;
+    let isDamage = false;
+    let reach = 8;
+    let reachStrong = 15;
+    let durationDA = 2;
+    let durationStrongDA = 4;
+    let activeCounter = 0;
+    return this;
+  }
+
+  method void dispose(){
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method boolean finished() { return isFinish; }
+
+  method void update(int fighterX, int targetX){
+    do body.erase();
+    var int r, var int d;
+    if(strong){
+      let r = reachStrong;
+      let d = durationDAStrong;
+    }
+    do body.draw();
+    return; 
+  }
+
+  method boolean hits(Figher f){
+    var Square ob;
+    let ob = f.getBody();
+    return (body.collides(ob))
+  }
+
+  method void buildUp(){
+    return; 
+  }
+
+  method void release(){
+    return; 
+  }
+
+  method void active(){
+    return; 
+  }
+
+}

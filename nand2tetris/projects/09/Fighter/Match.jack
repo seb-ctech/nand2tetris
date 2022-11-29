@@ -1,0 +1,49 @@
+class Match {
+
+  field Fighter Player, Bot;
+
+  constructor Match new(){
+    let Player = Fighter.new();
+    let Bot = Figher.new();
+  }
+
+  method void dispose() {
+      do Player.dispose();
+      do Bot.dispose();
+      do Memory.deAlloc(this);
+      return;
+   }
+
+  method void beginMatch(){
+
+    do Player.setPosition();
+    do Bot.setPosition();
+    do Player.setOpponent(Bot);
+    do Bot.setOpponent(Player);
+    return;
+  }
+
+  method void run(){
+    var char key;
+    var boolean exit;
+    let exit = false;
+
+    do beginMatch();
+    while (~exit) {
+
+      let key = Keyboard.keyPressed();
+      if (key = 81) { let exit = true; } // Q Key -> Quit
+      else { do Player.handleInput(key)}
+      do Bot.update(Player);
+      do Player.update(Bot);
+
+      if (Player.dead() | Bot.dead()){
+        let exit = true;
+      }
+
+    }
+
+    return;
+  }
+
+}
