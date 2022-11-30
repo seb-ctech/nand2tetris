@@ -97,7 +97,7 @@ class Fighter {
     var Square targetBody;
     let newX = body.getX() + (dir * speed);
     
-    if( (newX > -200) & ( (newX + body.getSizeX()) < 1200)){
+    if( (newX > 0) & ( (newX + body.getSizeX()) < Application.screenWidth())){
       do setPosition(newX);
     } 
     
