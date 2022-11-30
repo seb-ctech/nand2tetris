@@ -52,25 +52,18 @@ class Square {
    }
 
    method boolean collides(Square other){
-      var boolean isCollide;
-      var int left, leftB, right, rightB, top, topB, bottom, bottomB;
-      let left = x;
+
+      var int leftA, leftB, rightA, rightB, topA, topB, bottomA, bottomB;
+      let leftA = x;
       let leftB = other.getX();
-      let right = x + xsize;
+      let rightA = x + xsize;
       let rightB = leftB + other.getSizeX();
-      let top = y;
+      let topA = y;
       let topB = other.getY();
-      let bottom = y + ysize;
+      let bottomA = y + ysize;
       let bottomB = topB + other.getSizeY();
 
-      let isCollide = 
-      ( ( (leftB < right) & (bottomB > top) ) 
-      | ( (right > leftB) & (bottom > topB) ) 
-      | ( (left < rightB) & (bottom > topB) ) 
-      | ( (left < rightB) & (top < bottomB) ) );     
-
-      return isCollide;
+      return ( (leftA < rightB) & (rightA > leftB) & (topA < bottomB) & (bottomA > topB) );
 
    }
-
 }

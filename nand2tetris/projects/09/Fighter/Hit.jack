@@ -22,15 +22,16 @@ class Hit {
     let isBuildUp = true;
     let isActive = false;
     if(isStrong){
-      let reach = 28;
-      let duration = 24;
+      let reach = 60;
+      let duration = 60;
     } else {
-      let reach = 16;
-      let duration = 14;
+      let reach = 20;
+      let duration = 30;
     }
     let dir = caster.getTargetDir();
     let activeCounter = 0;
     let body = Square.new(0, 0, 0, 20);
+    do updateAttachment();
     return this;
   }
 
@@ -42,8 +43,6 @@ class Hit {
   method boolean finished() { return isFinish; }
 
   method void update(){
-    do Output.printString("update hit...");
-    do Output.println();
     if(isBuildUp){
       do buildUp();
     } else {
@@ -68,7 +67,7 @@ class Hit {
     var int width;
     let width = body.getSizeX();
     if(width < reach){
-      do body.setWidth(width + 4);
+      do body.setWidth(width + 10);
     } else {
       let isBuildUp = false;
       let isActive = true;
@@ -82,7 +81,7 @@ class Hit {
     var Square casterBody;
     let casterBody = castingFighter.getBody();
     let attachmentY = casterBody.getY() + 10;
-    if (dir > 0){
+    if (dir < 0){
       let attachmentX = casterBody.getRight(); 
     } else {
       let attachmentX = casterBody.getX() - body.getSizeX();

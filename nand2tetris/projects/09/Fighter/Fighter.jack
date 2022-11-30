@@ -111,11 +111,15 @@ class Fighter {
   }
 
   method void tryAttack(boolean s){
-    if (~ (activeHit)){
-      if(s){
-        do attackStrong();
-      } else {
-        do attackQuick();
+    var Square targetBody;
+    let targetBody = target.getBody();
+    if((~ body.collides(targetBody))){
+      if (~ (activeHit)){
+        if(s){
+          do attackStrong();
+        } else {
+          do attackQuick();
+        }
       }
     }
     return;
