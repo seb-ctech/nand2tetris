@@ -12,8 +12,8 @@ class Fighter {
   constructor Fighter new(){
     let wasHit = false;
     let activeHit = false;
-    let speed = 1;
-    let body = Square.new(0, 0, 40, 60);
+    let speed = 10;
+    let body = Square.new(0, 0, 40, 90);
     return this;
   }
 
@@ -22,8 +22,11 @@ class Fighter {
     return;
   }
 
-  method void setPosition(int _x, int _y){
-    do body.setPosition(_x, _y);
+  method void setPosition(int _x){
+    var int height, ycoord;
+    let ycoord = Application.screenHeight();
+    let height = body.getSizeY();
+    do body.setPosition(_x, ycoord - height);
     return;
   }
 
@@ -91,14 +94,11 @@ class Fighter {
 
   method void move(int dir){
     var int newX;
-    var int originalY;
     var Square targetBody;
-
-    let originalY = body.getY();
     let newX = body.getX() + (dir * speed);
     
     if( (newX > -200) & ( (newX + body.getSizeX()) < 1200)){
-      do body.setPosition(newX, originalY);
+      do setPosition(newX);
     } 
     
     let targetBody = target.getBody();

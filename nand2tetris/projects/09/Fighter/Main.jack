@@ -1,12 +1,17 @@
 class Main {
 
   function void main(){
+    // do Test.runTests();
+    do Main.run();
+    return;
+  }
+
+  function void run(){
     var Match match;
     let match = Match.new();
     do match.run();
     do match.dispose();
     return;
   }
-
 
 }

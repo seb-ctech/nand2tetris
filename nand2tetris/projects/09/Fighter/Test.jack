@@ -1,0 +1,28 @@
+class Test {
+
+  function void runTests(){
+    return;
+  }
+
+  function void unitFighter(){
+    var Fighter f;
+    let f = Fighter.new();
+    do f.update();
+    return;
+  }
+
+  function void unitSquare(){
+    var Square s;
+    let s = Square.new(5, 5, 5, 5);
+    do s.draw();
+    return;
+  }
+
+  function void testScreenAPI(){
+    do Screen.clearScreen();
+    do Screen.drawRectangle(50, 50, 60, 60);
+    return;
+  }
+
+
+}

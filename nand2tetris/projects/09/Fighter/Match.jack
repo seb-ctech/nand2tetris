@@ -19,8 +19,8 @@ class Match {
 
   method void beginMatch(){
 
-    do Player.setPosition(120, 50);
-    do Bot.setPosition(340, 50);
+    do Player.setPosition(120);
+    do Bot.setPosition(340);
     do Player.setOpponent(Bot);
     do Bot.setOpponent(Player);
     return;
@@ -38,6 +38,8 @@ class Match {
       if (key = 81) { let exit = true; } // Q Key -> Quit
       else { do Player.handleInput(key); }
       do ai.update();
+
+      do Screen.clearScreen();
       do Bot.update();
       do Player.update();
 

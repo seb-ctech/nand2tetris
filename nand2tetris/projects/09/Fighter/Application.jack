@@ -1,0 +1,12 @@
+class Application {
+
+  function int screenWidth(){
+    return 510;
+  }
+
+  function int screenHeight(){
+    return 254;
+  }
+
+  
+}
