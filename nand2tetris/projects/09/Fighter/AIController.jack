@@ -4,6 +4,7 @@ class AIController {
 
   constructor AIController new(Fighter fighter){
     let pawn = fighter;
+    let opponent = fighter.getTarget();
     return this;
   }
 
@@ -13,7 +14,15 @@ class AIController {
   }
 
   method void update(){
-
+    if(opponent.isHitting()){
+      do pawn.move((opponent.getTargetDir() * -1));
+    } else {
+      if (pawn.getDistanceOpp() > 20){
+        do pawn.move(opponent.getTargetDir());
+      } else {
+        do pawn.tryAttack(false);
+      }
+    }
     return;
   }
 

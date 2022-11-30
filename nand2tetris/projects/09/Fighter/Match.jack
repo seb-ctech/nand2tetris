@@ -6,7 +6,6 @@ class Match {
   constructor Match new(){
     let Player = Fighter.new();
     let Bot = Fighter.new();
-    let ai = AIController.new(Bot);
     return this;
   }
 
@@ -23,6 +22,7 @@ class Match {
     do Bot.setPosition(340);
     do Player.setOpponent(Bot);
     do Bot.setOpponent(Player);
+    let ai = AIController.new(Bot);
     return;
   }
 
@@ -45,10 +45,17 @@ class Match {
 
       if (Player.dead() | Bot.dead()){
         let exit = true;
+        do Screen.clearScreen();
+        do Output.moveCursor(12, 22);
+        if (Player.dead()){
+          do Log.logMessage("// Bot Wins! >:) //");
+        } else {
+          do Log.logMessage("// Player Wins! \\o/ \\o/ //");
+        }
       }
       do Sys.wait(20);
     }
-
+    do Sys.wait(2000);
     return;
   }
 
