@@ -158,3 +158,5 @@
 - Keyboard.keypress returns the currently pressed keycode pressed
 
 ![Character Set](./characterset.PNG)
+
+"When thinking about efficiency, think about the lower-level"
