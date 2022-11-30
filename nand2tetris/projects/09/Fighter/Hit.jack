@@ -1,6 +1,6 @@
 // A Hit is a square spawned from the fighter.
-// It can be small or large. Small hits require less time to spawn and despawn.
-// Long hits require longer time to spawn and despawn.
+// It can be Strong or Quick. Quick hits require less time to spawn and despawn.
+// Strong hits require longer time to spawn and despawn.
 // While a hit is active it will block the fighter from casting a new hit.
 
 class Hit {
@@ -26,8 +26,8 @@ class Hit {
       let reach = 40;
       let duration = 12;
     } else {
-      let reach = 28;
-      let duration = 8;
+      let reach = 24;
+      let duration = 5;
     }
     let dir = caster.getTargetDir();
     let activeCounter = 0;
@@ -73,10 +73,23 @@ class Hit {
     let width = body.getSizeX();
     do Log.logValues(width, reach);
     if(width < reach){
-      do body.setWidth(width + 8);
+      do body.setWidth(width + 16);
     } else {
       let isBuildUp = false;
       let isActive = true;
+    }
+    return; 
+  }
+  
+  method void release(){
+    var int width, newWidth;
+    let width = body.getSizeX();
+    let newWidth = width - 10;
+    do Log.logValues(width, 0);
+    if(newWidth > 0){
+      do body.setWidth(newWidth);
+    } else {
+      let isFinish = true;
     }
     return; 
   }
@@ -96,17 +109,6 @@ class Hit {
     return;
   }
 
-  method void release(){
-    var int width;
-    let width = body.getSizeX();
-    do Log.logValues(width, 0);
-    if(width > 0){
-      do body.setWidth(width - 4);
-    } else {
-      let isFinish = true;
-    }
-    return; 
-  }
 
   method void active(){
     do Log.logValues(activeCounter, duration);
