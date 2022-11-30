@@ -17,10 +17,12 @@ class AIController {
     if(opponent.isHitting()){
       do pawn.move((opponent.getTargetDir() * -1));
     } else {
-      if (pawn.getDistanceOpp() > 20){
+      if (pawn.getDistanceOpp() > 40){
         do pawn.move(opponent.getTargetDir());
       } else {
-        do pawn.tryAttack(false);
+        if (pawn.getDistanceOpp() < 30){
+          do pawn.tryAttack(false);
+        } 
       }
     }
     return;

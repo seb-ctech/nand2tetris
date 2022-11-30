@@ -45,6 +45,7 @@ class Match {
 
       if (Player.dead() | Bot.dead()){
         let exit = true;
+        do Sys.wait(1000);
         do Screen.clearScreen();
         do Output.moveCursor(12, 22);
         if (Player.dead()){
