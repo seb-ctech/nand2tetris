@@ -38,7 +38,7 @@ class Match {
       if (key = 81) { let exit = true; } // Q Key -> Quit
       else { do Player.handleInput(key); }
       do ai.update();
-
+      do Output.moveCursor(0, 0);
       do Screen.clearScreen();
       do Bot.update();
       do Player.update();

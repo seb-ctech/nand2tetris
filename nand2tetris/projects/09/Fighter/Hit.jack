@@ -21,12 +21,13 @@ class Hit {
     let strong = isStrong;
     let isBuildUp = true;
     let isActive = false;
-    if(isStrong){
-      let reach = 60;
-      let duration = 60;
+    let isFinish = false;
+    if(strong){
+      let reach = 40;
+      let duration = 12;
     } else {
-      let reach = 20;
-      let duration = 30;
+      let reach = 28;
+      let duration = 8;
     }
     let dir = caster.getTargetDir();
     let activeCounter = 0;
@@ -36,6 +37,7 @@ class Hit {
   }
 
   method void dispose(){
+    do Memory.deAlloc(body);
     do Memory.deAlloc(this);
     return;
   }
@@ -44,11 +46,14 @@ class Hit {
 
   method void update(){
     if(isBuildUp){
+      do Log.logMessage(" -- BUILDUP -- ");
       do buildUp();
     } else {
       if(isActive){
+        do Log.logMessage(" -- ACTIVE -- ");
         do active();
       } else {
+        do Log.logMessage(" -- RELEASE -- ");
         do release();
       }
     }
@@ -60,14 +65,15 @@ class Hit {
   method boolean hits(Fighter f){
     var Square ob;
     let ob = f.getBody();
-    return (body.collides(ob));
+    return (body.collides(ob) & isActive);
   }
 
   method void buildUp(){
     var int width;
     let width = body.getSizeX();
+    do Log.logValues(width, reach);
     if(width < reach){
-      do body.setWidth(width + 10);
+      do body.setWidth(width + 8);
     } else {
       let isBuildUp = false;
       let isActive = true;
@@ -93,8 +99,9 @@ class Hit {
   method void release(){
     var int width;
     let width = body.getSizeX();
-    if(width < reach){
-      do body.setWidth(width - 6);
+    do Log.logValues(width, 0);
+    if(width > 0){
+      do body.setWidth(width - 4);
     } else {
       let isFinish = true;
     }
@@ -102,6 +109,7 @@ class Hit {
   }
 
   method void active(){
+    do Log.logValues(activeCounter, duration);
     if(activeCounter < duration){
       let activeCounter = activeCounter + 1;
     } else {

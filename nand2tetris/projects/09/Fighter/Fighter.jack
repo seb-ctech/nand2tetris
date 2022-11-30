@@ -22,11 +22,11 @@ class Fighter {
     return;
   }
 
-  method void setPosition(int _x){
+  method void setPosition(int x){
     var int height, ycoord;
     let ycoord = Application.screenHeight();
     let height = body.getSizeY();
-    do body.setPosition(_x, ycoord - height);
+    do body.setPosition(x, ycoord - height);
     return;
   }
 
@@ -48,7 +48,7 @@ class Fighter {
   method void dispose() {
       do body.dispose();
       if(activeHit){
-        do  hit.dispose();
+        do hit.dispose();
       }
       do Memory.deAlloc(this);
       return;
@@ -57,7 +57,7 @@ class Fighter {
   method void update(){
     if (activeHit){
       do hit.update();
-      if(hit.hits(target) & (~ blocking)){
+      if(hit.hits(target) & (~ target.isBlocking())){
         let wasHit = true;
       }
       if (hit.finished()){
@@ -74,7 +74,7 @@ class Fighter {
     // Spacebar -> Strong Hit
     if(key = 32) {
       if (~ (activeHit)){
-        do tryAttack(false);
+        do tryAttack(true);
       }
     }
     // C -> Quick Hit
